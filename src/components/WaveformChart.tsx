@@ -78,7 +78,7 @@ export function WaveformChart({ packet }: WaveformChartProps) {
   ]);
 
   const width = 800;
-  const height = 150;
+  const height = 280;
 
   // uPlot インスタンスの生成（マウント時）と破棄（アンマウント時）
   useEffect(() => {

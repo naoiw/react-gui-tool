@@ -156,7 +156,7 @@ export function SerialControl({
           Refresh
         </button>
         <button type="button" onClick={handleAddPort} disabled={connected}>
-          ポートを追加
+          Add port
         </button>
         <label className="serial-control__label">
           COMポート一覧:

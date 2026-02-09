@@ -150,15 +150,15 @@ export function SerialControl({
   }, [onDisconnect]);
 
   return (
-    <section aria-label="シリアル通信" style={{ marginBottom: '1rem' }}>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
+    <section aria-label="シリアル通信" className="serial-control" style={{ marginBottom: '1rem' }}>
+      <div className="serial-control__row">
         <button type="button" onClick={handleRefresh} disabled={connected}>
           Refresh
         </button>
         <button type="button" onClick={handleAddPort} disabled={connected}>
           ポートを追加
         </button>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+        <label className="serial-control__label">
           COMポート一覧:
           <select
             value={selectedIndex < 0 ? '' : selectedIndex}
@@ -174,7 +174,7 @@ export function SerialControl({
             ))}
           </select>
         </label>
-        <label style={{ display: 'flex', alignItems: 'center', gap: '0.25rem' }}>
+        <label className="serial-control__label">
           Baudrate:
           <select
             value={baudRate}

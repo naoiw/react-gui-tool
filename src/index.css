@@ -20,3 +20,36 @@ body {
 #root {
   min-height: 100vh;
 }
+
+/* シリアル通信コントロール: ボタン・プルダウンを操作しやすく */
+.serial-control__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.serial-control .serial-control__row button {
+  min-height: 42px;
+  padding: 0.6rem 1.2rem;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.serial-control .serial-control__row button:disabled {
+  cursor: not-allowed;
+}
+
+.serial-control__label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1rem;
+}
+
+.serial-control .serial-control__row select {
+  min-height: 42px;
+  padding: 0.5rem 2rem 0.5rem 0.75rem;
+  font-size: 1rem;
+  cursor: pointer;
+}

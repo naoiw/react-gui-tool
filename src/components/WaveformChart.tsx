@@ -59,8 +59,23 @@ function makeChartOptions(
       },
     },
     axes: [
-      { scale: 'x', label: 'point', side: 2, size: 40 },
-      { scale: 'y', label: 'count', side: 3, size: 50 },
+      {
+        scale: 'x',
+        label: 'point',
+        side: 2,
+        size: 55,
+        labelSize: 20,
+        labelGap: -20,
+      },
+      {
+        scale: 'y',
+        label: 'count',
+        side: 3,
+        size: 100,
+        gap: 8,
+        labelSize: 20,
+        labelGap: 0,
+      },
     ],
     legend: { show: false },
   };
@@ -79,6 +94,8 @@ export function WaveformChart({ packet }: WaveformChartProps) {
 
   const width = 800;
   const height = 280;
+  /** 軸ラベルが切れないよう uPlot に渡す高さ（下側に余白を追加） */
+  const chartHeight = height + 28;
 
   // uPlot インスタンスの生成（マウント時）と破棄（アンマウント時）
   useEffect(() => {
@@ -87,7 +104,7 @@ export function WaveformChart({ packet }: WaveformChartProps) {
     for (let ch = 0; ch < CHANNEL_COUNT; ch++) {
       const el = containers[ch];
       if (!el) continue;
-      const opts = makeChartOptions(ch, autoScale, width, height);
+      const opts = makeChartOptions(ch, autoScale, width, chartHeight);
       const x = buildX();
       const y = new Array<number | null>(POINTS).fill(null);
       const u = new uPlot(opts, [x, y], el);
@@ -190,9 +207,10 @@ export function WaveformChart({ packet }: WaveformChartProps) {
             data-channel={ch}
             style={{
               width,
-              height: height + 2,
+              height: chartHeight + 8,
               border: '1px solid #999',
               boxSizing: 'border-box',
+              overflow: 'visible',
             }}
           />
         ))}

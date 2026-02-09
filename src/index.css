@@ -29,6 +29,10 @@ body {
   align-items: center;
 }
 
+.serial-control__row + .serial-control__row {
+  margin-top: 0.5rem;
+}
+
 .serial-control .serial-control__row button {
   min-height: 42px;
   padding: 0.6rem 1.2rem;

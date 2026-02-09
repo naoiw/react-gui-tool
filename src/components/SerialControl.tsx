@@ -189,6 +189,8 @@ export function SerialControl({
             ))}
           </select>
         </label>
+      </div>
+      <div className="serial-control__row">
         {connected ? (
           <button type="button" onClick={handleDisconnect}>
             Disconnect

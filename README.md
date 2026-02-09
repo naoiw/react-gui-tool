@@ -46,8 +46,23 @@ pnpm build
 
 ## GitHub Pages でのデプロイ
 
-1. `pnpm build` でビルドする
-2. 出力された `dist` を GitHub Actions の `actions/upload-pages-artifact` と `actions/deploy-pages` でデプロイするか、`gh-pages` パッケージなどで `dist` を `gh-pages` ブランチにプッシュする
+`main` ブランチへの push で GitHub Actions がビルドし、GitHub Pages へ自動デプロイします。
+
+### 初回のみ：GitHub Pages を有効にする
+
+**404 / "Creating Pages deployment failed" が出る場合は、リポジトリで Pages のソースを「GitHub Actions」に設定してください。**
+
+1. GitHub でリポジトリを開く
+2. **Settings** → 左メニュー **Code and automation** の **Pages**
+3. **Build and deployment** の **Source** で **GitHub Actions** を選択する  
+   （「Deploy from a branch」や「None」のままでは `deploy-pages` が 404 になります）
+
+設定後、`main` への push または **Actions** タブから「Deploy to GitHub Pages」を手動実行するとデプロイされます。
+
+### ローカルでのビルド
+
+- `pnpm build` でビルドし、出力は `dist` にあります。
+- デプロイは `actions/upload-pages-artifact` と `actions/deploy-pages` が行います。
 
 **注意**: 本番は HTTPS のため Web Serial API は利用可能ですが、**対応ブラウザは Chrome/Edge に限定されます**。GitHub Pages の URL を開く際も Chrome または Edge を使用してください。
 

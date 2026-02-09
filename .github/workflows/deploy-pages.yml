@@ -1,5 +1,8 @@
 # GitHub Pages へ dist をデプロイする
 # README: pnpm build → upload-pages-artifact → deploy-pages
+#
+# 404 が出る場合: リポジトリの Settings → Pages で Source を「GitHub Actions」に設定すること
+# https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-with-a-custom-github-actions-workflow
 name: Deploy to GitHub Pages
 
 on:

@@ -18,23 +18,27 @@ flowchart LR
   subgraph serial [シリアル]
     WebSerial[Web Serial API]
   end
-  subgraph data [データ処理]
+  subgraph data [データ]
     Parser[PacketParser]
-    Buffer[リングバッファ]
+    Buffer[20点 x 4ch]
   end
-  SerialControl -->|接続/ポート選択| WebSerial
+  SerialControl -->|onPacket| App[App lastPacket]
   WebSerial -->|バイト列| Parser
-  Parser -->|ch0-ch3| Buffer
-  Buffer -->|プロット用データ| WaveformChart
+  Parser -->|ch0-ch3| App
+  App -->|lastPacket| WaveformChart
+  WaveformChart -->|バッファ更新| Buffer
+  Buffer -->|x: 0..19, y: chN[]| uPlot0[uPlot ch0]
+  Buffer -->|x: 0..19, y: chN[]| uPlot1[uPlot ch1]
+  Buffer -->|x: 0..19, y: chN[]| uPlot2[uPlot ch2]
+  Buffer -->|x: 0..19, y: chN[]| uPlot3[uPlot ch3]
 ```
 
 データの流れ:
 
-1. **SerialControl** … ユーザーが Refresh → ポート選択 → ボーレート選択 → Connect。Web Serial API でポートを開く。
+1. **SerialControl** … ユーザーが Refresh → ポート選択 → ボーレート選択 → Connect。Web Serial API でポートを開く。受信パケットは `onPacket` で App に渡す。
 2. **Web Serial API** … データが来るたびにバイト列をアプリに渡す（イベント駆動）。
 3. **PacketParser** … 16byte を ch0〜ch3（各 32bit unsigned、リトルエンディアン）にパース。
-4. **リングバッファ** … 横軸 20 point 分を保持。新しいデータで古いデータを押し出し。
-5. **WaveformChart** … uPlot で波形を描画。チャンネルごとの表示/非表示はトグルで切り替え。
+4. **WaveformChart** … App から `lastPacket` を受け取り、内部で横軸 20 point × 4ch のバッファを保持。新しいデータで古いデータを押し出し（21 点目以前は破棄）。4 つの独立した uPlot インスタンス（ch0〜ch3 各 1 つ）で波形を描画。コンフィグ（系統名・線色）はビルド時に読み込む。
 
 ## 画面・UI 構成
 
@@ -52,8 +56,10 @@ flowchart LR
 
 ### グラフエリア
 
-- uPlot による波形表示。
-- ch0〜ch3 をプロットし、各チャンネルの表示/非表示はトグルで切り替える。
+- ch0〜ch3 用に **4 つの独立したグラフ**を縦に配置する。各グラフは 1 チャンネル専用（1 つの uPlot に 1 系列）。
+- 横軸は "point"、20 点。新しいデータが入ったら追加し、21 点目以前のデータは破棄して波形が流れるようにする。
+- 縦軸は "count"、0〜2^32。オートスケールはチェックボックスで選択可能。
+- 各チャンネルの系統名（ラベル）と線の色はコンフィグで変更可能（ビルド時読み込み）。
 
 ## シリアル通信
 
@@ -88,12 +94,13 @@ flowchart LR
 ## グラフ仕様
 
 - **ライブラリ** … uPlot
-- **横軸** … point（インデックス）。バッファサイズは **20**。新しいデータが来たら追加し、古いデータは捨てる（リングバッファ的な動作）。
-- **縦軸** … count。32bit unsigned を想定。
+- **レイアウト** … ch0〜ch3 用に 4 つの独立したグラフを縦に配置。各グラフは 1 チャンネル専用。
+- **横軸** … 名前は "point"。20 点を設ける。新しいデータが入ったら更新し、21 点目以前のデータは破棄して波形が流れるようにする。
+- **縦軸** … 名前は "count"。0〜2^32（32bit unsigned）の値をとる。
 - **スケール**
-  - 縦軸の min / max を定数で設定可能にする。
-  - **auto scale 機能**を設け、表示中のデータ範囲に合わせて縦軸を自動調整できるようにする。
-- **表示** … ch0〜ch3 を波形としてプロット。各チャンネルの表示/非表示はトグルで切り替える。
+  - 縦軸の min / max は 0〜2^32 で固定可能。
+  - **オートスケール**をチェックボックスで選択可能。オンにすると表示中のデータ範囲に合わせて縦軸を自動調整する。
+- **コンフィグ** … 各 ch の系統名（ラベル）と線の色をコンフィグで変更可能。ビルド時にソース（または import する JSON）から読み込む。
 
 ## コンポーネント・責務の目安
 
@@ -101,12 +108,13 @@ flowchart LR
 |---------------------------|------|
 | **SerialControl**         | ポート一覧取得・選択、ボーレート選択、Connect/Disconnect トグル、エラー/状態のインライン表示 |
 | **PacketParser**          | 16byte バイト列を ch0〜ch3（32bit unsigned）にパース |
-| **WaveformChart**         | uPlot のラップ、20 point のバッファ管理、チャンネル表示トグル、auto scale |
+| **WaveformChart**         | uPlot のラップ、20 point のバッファ管理、4 つの uPlot インスタンス、オートスケール用チェックボックス、コンフィグ（系統名・線色）の適用 |
 | **App**                   | シリアル接続状態・受信データなどの状態を保持し、上記コンポーネントに渡す |
 
 ### ファイル配置（推奨）
 
 - `src/components/` … SerialControl, WaveformChart 等の UI コンポーネント
+- `src/lib/config/` … 波形用チャンネル設定（系統名・線色）の型とデフォルト
 - `src/lib/serial/` … Web Serial API のラップ、ポート取得・接続ロジック
 - `src/lib/packet/` … パケットフォーマットの定数・型、PacketParser
 

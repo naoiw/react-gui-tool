@@ -5,9 +5,8 @@
  */
 import { useState } from 'react';
 import { SerialControl } from './components/SerialControl';
+import { WaveformChart } from './components/WaveformChart';
 import type { PacketData } from './lib/packet/types';
-
-// import { WaveformChart } from './components/WaveformChart';
 
 export default function App() {
   const [connected, setConnected] = useState(false);
@@ -39,10 +38,7 @@ export default function App() {
         </p>
       )}
 
-      {/* グラフエリア（WaveformChart を配置予定） */}
-      <section aria-label="波形グラフ">
-        <p>WaveformChart コンポーネント配置予定</p>
-      </section>
+      <WaveformChart packet={lastPacket} />
     </main>
   );
 }

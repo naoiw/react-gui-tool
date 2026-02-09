@@ -188,7 +188,12 @@ export function WaveformChart({ packet }: WaveformChartProps) {
               if (containerRefs.current) containerRefs.current[ch] = el;
             }}
             data-channel={ch}
-            style={{ width, height: height + 2 }}
+            style={{
+              width,
+              height: height + 2,
+              border: '1px solid #999',
+              boxSizing: 'border-box',
+            }}
           />
         ))}
       </div>

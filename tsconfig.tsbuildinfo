@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/serialcontrol.tsx","./src/lib/packet/parser.ts","./src/lib/packet/types.ts","./src/lib/serial/serialservice.ts"],"version":"5.6.3"}
+{"root":["./src/app.tsx","./src/main.tsx","./src/vite-env.d.ts","./src/components/serialcontrol.tsx","./src/components/waveformchart.tsx","./src/lib/config/channelconfig.ts","./src/lib/packet/parser.ts","./src/lib/packet/types.ts","./src/lib/serial/serialservice.ts"],"version":"5.6.3"}

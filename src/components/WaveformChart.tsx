@@ -21,6 +21,7 @@ export interface WaveformChartProps {
   packet: PacketData | null;
 }
 
+/** 横軸の値（インデックス 0～19。表示は 20～1 に変換） */
 function buildX(): number[] {
   const x: number[] = [];
   for (let i = 0; i < POINTS; i++) x.push(i);
@@ -66,6 +67,7 @@ function makeChartOptions(
         size: 55,
         labelSize: 20,
         labelGap: -20,
+        values: (_, splits) => splits.map((v) => String(POINTS - Math.round(v))),
       },
       {
         scale: 'y',

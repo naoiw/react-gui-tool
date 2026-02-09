@@ -161,6 +161,7 @@ export function SerialControl({
         <label className="serial-control__label">
           COMポート一覧:
           <select
+            className="serial-control__port-select"
             value={selectedIndex < 0 ? '' : selectedIndex}
             onChange={(e) => setSelectedIndex(e.target.value === '' ? -1 : Number(e.target.value))}
             disabled={connected}

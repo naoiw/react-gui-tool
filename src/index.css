@@ -57,3 +57,7 @@ body {
   font-size: 1rem;
   cursor: pointer;
 }
+
+.serial-control__port-select {
+  min-width: 12rem;
+}

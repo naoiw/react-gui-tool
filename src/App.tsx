@@ -24,7 +24,7 @@ export default function App() {
 
   return (
     <main style={{ padding: '1rem', maxWidth: '960px', margin: '0 auto' }}>
-      <h1>React GUI Tool - シリアル波形表示</h1>
+      <h1>React GUI Tool</h1>
       <p>
         対応ブラウザ: <strong>Chrome または Edge</strong>（Web Serial API 対応）
       </p>

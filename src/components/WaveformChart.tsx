@@ -118,7 +118,6 @@ export function WaveformChart({
               style={{
                 display: channelVisible[ch] !== false ? undefined : 'none',
                 width: '100%',
-                border: '1px solid #999',
                 boxSizing: 'border-box',
                 overflow: 'visible',
               }}

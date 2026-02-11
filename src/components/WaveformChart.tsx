@@ -125,7 +125,7 @@ export function WaveformChart({
               <div
                 style={{
                   padding: '4px 8px 0',
-                  fontSize: '0.9rem',
+                  fontSize: '1.25rem',
                   fontWeight: 600,
                 }}
               >

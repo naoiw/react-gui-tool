@@ -162,6 +162,7 @@ export function WaveformChart({
                     type="linear"
                     dataKey="value"
                     stroke={cfg.color}
+                    strokeWidth={1.5}
                     dot={false}
                     connectNulls
                     isAnimationActive={false}

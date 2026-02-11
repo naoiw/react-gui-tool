@@ -152,8 +152,8 @@ export function WaveformChart({
                     domain={[yMin, yMax]}
                     label={{
                       value: 'count',
-                      angle: -90,
-                      position: 'insideLeft',
+                      angle: 0,
+                      position: 'top',
                       style: { textAnchor: 'middle' },
                     }}
                   />

@@ -64,7 +64,7 @@ function computeYDomain(buffer: number[], autoScale: boolean): [number, number] 
 
 const DEFAULT_CHANNEL_VISIBLE: boolean[] = [true, true, true, true];
 
-const HEIGHT = 280;
+const HEIGHT = 350;
 
 export function WaveformChart({
   packet,
@@ -134,7 +134,7 @@ export function WaveformChart({
               <ResponsiveContainer width="100%" height={HEIGHT}>
                 <LineChart
                   data={chartData}
-                  margin={{ top: 8, right: 16, left: 52, bottom: 24 }}
+                  margin={{ top: 30, right: 16, left: 52, bottom: 24 }}
                 >
                   <XAxis
                     dataKey="point"

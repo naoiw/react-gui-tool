@@ -44,6 +44,20 @@ body {
   cursor: not-allowed;
 }
 
+.serial-control .serial-control__row button.channel-toggle--on {
+  background-color: #e0e8f0;
+  border: 1px solid #6b8cae;
+}
+
+/* ch0～ch3 トグル: Stop との間を空け、右端に寄せる */
+.serial-control__channel-toggles {
+  margin-left: auto;
+  padding-left: 1.5rem;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .serial-control__label {
   display: flex;
   align-items: center;
@@ -60,4 +74,13 @@ body {
 
 .serial-control__port-select {
   min-width: 12rem;
+}
+
+/* COMポート一覧・Baudrate を右端に寄せる */
+.serial-control__port-group {
+  margin-left: auto;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
 }

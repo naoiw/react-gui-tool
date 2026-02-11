@@ -21,6 +21,9 @@ export interface SerialControlProps {
   onDisconnect: () => void;
   onPacket: (data: PacketData) => void;
   onError: (message: string | null) => void;
+  /** ch0～ch3 の波形表示 ON/OFF（渡すと 3 行目にトグルを表示） */
+  channelVisible?: boolean[];
+  onChannelVisibleChange?: (index: number, visible: boolean) => void;
 }
 
 function getPortLabel(port: SerialPort, index: number): string {
@@ -40,6 +43,8 @@ export function SerialControl({
   onDisconnect,
   onPacket,
   onError,
+  channelVisible,
+  onChannelVisibleChange,
 }: SerialControlProps) {
   const [ports, setPorts] = useState<SerialPort[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
@@ -158,38 +163,40 @@ export function SerialControl({
         <button type="button" onClick={handleAddPort} disabled={connected}>
           Add port
         </button>
-        <label className="serial-control__label">
-          COMポート一覧:
-          <select
-            className="serial-control__port-select"
-            value={selectedIndex < 0 ? '' : selectedIndex}
-            onChange={(e) => setSelectedIndex(e.target.value === '' ? -1 : Number(e.target.value))}
-            disabled={connected}
-            aria-label="COMポート一覧"
-          >
-            <option value="">-- 選択 --</option>
-            {ports.map((port, i) => (
-              <option key={i} value={i}>
-                {getPortLabel(port, i)}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="serial-control__label">
-          Baudrate:
-          <select
-            value={baudRate}
-            onChange={(e) => setBaudRate(Number(e.target.value))}
-            disabled={connected}
-            aria-label="Baudrate"
-          >
-            {BAUD_RATES.map((r) => (
-              <option key={r} value={r}>
-                {r}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="serial-control__port-group">
+          <label className="serial-control__label">
+            COMポート一覧:
+            <select
+              className="serial-control__port-select"
+              value={selectedIndex < 0 ? '' : selectedIndex}
+              onChange={(e) => setSelectedIndex(e.target.value === '' ? -1 : Number(e.target.value))}
+              disabled={connected}
+              aria-label="COMポート一覧"
+            >
+              <option value="">-- 選択 --</option>
+              {ports.map((port, i) => (
+                <option key={i} value={i}>
+                  {getPortLabel(port, i)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="serial-control__label">
+            Baudrate:
+            <select
+              value={baudRate}
+              onChange={(e) => setBaudRate(Number(e.target.value))}
+              disabled={connected}
+              aria-label="Baudrate"
+            >
+              {BAUD_RATES.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
       </div>
       <div className="serial-control__row">
         {connected ? (
@@ -207,6 +214,24 @@ export function SerialControl({
         <button type="button" disabled>
           Stop
         </button>
+        {channelVisible != null &&
+          onChannelVisibleChange != null &&
+          channelVisible.length >= 4 && (
+            <div className="serial-control__channel-toggles">
+              {[0, 1, 2, 3].map((ch) => (
+                <button
+                  key={ch}
+                  type="button"
+                  aria-pressed={channelVisible[ch]}
+                  aria-label={`ch${ch} 波形表示`}
+                  className={channelVisible[ch] ? 'channel-toggle--on' : undefined}
+                  onClick={() => onChannelVisibleChange(ch, !channelVisible[ch])}
+                >
+                  ch{ch}
+                </button>
+              ))}
+            </div>
+          )}
       </div>
       {connected && (
         <p style={{ margin: '0.25rem 0', fontSize: '0.9rem' }}>接続中</p>

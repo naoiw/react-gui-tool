@@ -12,6 +12,15 @@ export default function App() {
   const [connected, setConnected] = useState(false);
   const [serialError, setSerialError] = useState<string | null>(null);
   const [lastPacket, setLastPacket] = useState<PacketData | null>(null);
+  const [channelVisible, setChannelVisible] = useState<boolean[]>([true, true, true, true]);
+
+  const handleChannelVisibleChange = (index: number, visible: boolean) => {
+    setChannelVisible((prev) => {
+      const next = [...prev];
+      next[index] = visible;
+      return next;
+    });
+  };
 
   return (
     <main style={{ padding: '1rem', maxWidth: '960px', margin: '0 auto' }}>
@@ -25,6 +34,8 @@ export default function App() {
         onDisconnect={() => setConnected(false)}
         onPacket={setLastPacket}
         onError={setSerialError}
+        channelVisible={channelVisible}
+        onChannelVisibleChange={handleChannelVisibleChange}
       />
       {serialError != null && (
         <p role="alert" style={{ marginBottom: '0.5rem' }}>
@@ -38,7 +49,7 @@ export default function App() {
         </p>
       )}
 
-      <WaveformChart packet={lastPacket} />
+      <WaveformChart packet={lastPacket} channelVisible={channelVisible} />
     </main>
   );
 }

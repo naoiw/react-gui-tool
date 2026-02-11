@@ -19,6 +19,8 @@ const Y_MAX = 2 ** 32;
 export interface WaveformChartProps {
   /** 直近受信パケット（null の場合は更新しない） */
   packet: PacketData | null;
+  /** ch0～ch3 の表示 ON/OFF（未指定時は全て表示） */
+  channelVisible?: boolean[];
 }
 
 /** 横軸の値（インデックス 0～19。表示は 20～1 に変換） */
@@ -83,7 +85,9 @@ function makeChartOptions(
   };
 }
 
-export function WaveformChart({ packet }: WaveformChartProps) {
+const DEFAULT_CHANNEL_VISIBLE: boolean[] = [true, true, true, true];
+
+export function WaveformChart({ packet, channelVisible = DEFAULT_CHANNEL_VISIBLE }: WaveformChartProps) {
   const [autoScale, setAutoScale] = useState(false);
   const containerRefs = useRef<(HTMLDivElement | null)[]>([null, null, null, null]);
   const plotRefs = useRef<(uPlot | null)[]>([null, null, null, null]);
@@ -208,6 +212,7 @@ export function WaveformChart({ packet }: WaveformChartProps) {
             }}
             data-channel={ch}
             style={{
+              display: channelVisible[ch] !== false ? undefined : 'none',
               width,
               height: chartHeight + 8,
               border: '1px solid #999',

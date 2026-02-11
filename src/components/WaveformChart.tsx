@@ -1,12 +1,17 @@
 /**
- * WaveformChart … uPlot のラップ、20 point のバッファ管理、
+ * WaveformChart … Recharts のラップ、20 point のバッファ管理、
  * 4 つの独立したグラフ（ch0～ch3）、オートスケール用チェックボックス、
  * コンフィグ（系統名・線色）の適用。
  * docs/architecture.md のコンポーネント責務に従う。
  */
 import { useEffect, useRef, useState } from 'react';
-import uPlot from 'uplot';
-import 'uplot/dist/uPlot.min.css';
+import {
+  Line,
+  LineChart,
+  ResponsiveContainer,
+  XAxis,
+  YAxis,
+} from 'recharts';
 import { CHANNEL_CONFIG } from '../lib/config/channelConfig';
 import type { PacketData } from '../lib/packet/types';
 import { CHANNEL_COUNT } from '../lib/packet/types';
@@ -23,172 +28,67 @@ export interface WaveformChartProps {
   channelVisible?: boolean[];
 }
 
-/** 横軸の値（インデックス 0～19。表示は 20～1 に変換） */
-function buildX(): number[] {
-  const x: number[] = [];
-  for (let i = 0; i < POINTS; i++) x.push(i);
-  return x;
+/** 1 チャンネル分の描画用データ */
+interface ChartDatum {
+  point: number;
+  value: number | null;
 }
 
-function makeChartOptions(
-  channelIndex: number,
-  autoScale: boolean,
-  width: number,
-  height: number
-): uPlot.Options {
-  const cfg = CHANNEL_CONFIG[channelIndex] ?? { label: `ch${channelIndex}`, color: '#888' };
-  return {
-    width,
-    height,
-    title: cfg.label,
-    series: [
-      { label: 'point' },
-      {
-        label: cfg.label,
-        stroke: cfg.color,
-        scale: 'y',
-      },
-    ],
-    scales: {
-      x: {
-        range: [0, POINTS - 1],
-        min: 0,
-        max: POINTS - 1,
-      },
-      y: {
-        min: 0,
-        max: Y_MAX,
-        ...(autoScale ? { auto: true } : { range: [0, Y_MAX] }),
-      },
-    },
-    axes: [
-      {
-        scale: 'x',
-        label: 'point',
-        side: 2,
-        size: 55,
-        labelSize: 20,
-        labelGap: -20,
-        values: (_, splits) => splits.map((v) => String(POINTS - Math.round(v))),
-      },
-      {
-        scale: 'y',
-        label: 'count',
-        side: 3,
-        size: 100,
-        gap: 8,
-        labelSize: 20,
-        labelGap: 0,
-      },
-    ],
-    legend: { show: false },
-  };
+/** 横軸の値（インデックス 0～19。表示は 20～1 に変換） */
+function buildChartData(buffer: number[]): ChartDatum[] {
+  const data: ChartDatum[] = [];
+  for (let i = 0; i < POINTS; i++) {
+    data.push({
+      point: i,
+      value: i < buffer.length ? buffer[i]! : null,
+    });
+  }
+  return data;
+}
+
+function computeYDomain(buffer: number[], autoScale: boolean): [number, number] {
+  if (!autoScale || buffer.length === 0) return [0, Y_MAX];
+  let min = buffer[0]!;
+  let max = buffer[0]!;
+  for (let i = 1; i < buffer.length; i++) {
+    const v = buffer[i]!;
+    if (v < min) min = v;
+    if (v > max) max = v;
+  }
+  const pad = (max - min) * 0.05 || 1;
+  return [
+    Math.max(0, min - pad),
+    Math.min(Y_MAX, max + pad),
+  ];
 }
 
 const DEFAULT_CHANNEL_VISIBLE: boolean[] = [true, true, true, true];
 
-export function WaveformChart({ packet, channelVisible = DEFAULT_CHANNEL_VISIBLE }: WaveformChartProps) {
+const WIDTH = 800;
+const HEIGHT = 280;
+
+export function WaveformChart({
+  packet,
+  channelVisible = DEFAULT_CHANNEL_VISIBLE,
+}: WaveformChartProps) {
   const [autoScale, setAutoScale] = useState(false);
-  const containerRefs = useRef<(HTMLDivElement | null)[]>([null, null, null, null]);
-  const plotRefs = useRef<(uPlot | null)[]>([null, null, null, null]);
-  const buffersRef = useRef<number[][]>([
-    [],
-    [],
-    [],
-    [],
-  ]);
+  const [, setDataVersion] = useState(0);
+  const buffersRef = useRef<number[][]>([[], [], [], []]);
 
-  const width = 800;
-  const height = 280;
-  /** 軸ラベルが切れないよう uPlot に渡す高さ（下側に余白を追加） */
-  const chartHeight = height + 28;
-
-  // uPlot インスタンスの生成（マウント時）と破棄（アンマウント時）
-  useEffect(() => {
-    const containers = containerRefs.current;
-    const plots: uPlot[] = [];
-    for (let ch = 0; ch < CHANNEL_COUNT; ch++) {
-      const el = containers[ch];
-      if (!el) continue;
-      const opts = makeChartOptions(ch, autoScale, width, chartHeight);
-      const x = buildX();
-      const y = new Array<number | null>(POINTS).fill(null);
-      const u = new uPlot(opts, [x, y], el);
-      plotRefs.current[ch] = u;
-      plots.push(u);
-    }
-    return () => {
-      for (let ch = 0; ch < CHANNEL_COUNT; ch++) {
-        plotRefs.current[ch]?.destroy();
-        plotRefs.current[ch] = null;
-      }
-    };
-  }, []);
-
-  // オートスケール変更時に scale を更新（uPlot の opts は作成時のみなので setScale で縦軸を更新）
-  useEffect(() => {
-    const buffers = buffersRef.current;
-    for (let ch = 0; ch < CHANNEL_COUNT; ch++) {
-      const u = plotRefs.current[ch];
-      if (!u) continue;
-      const arr = buffers[ch];
-      if (!arr) continue;
-      if (autoScale && arr.length > 0) {
-        let min = arr[0]!;
-        let max = arr[0]!;
-        for (let i = 1; i < arr.length; i++) {
-          const v = arr[i]!;
-          if (v < min) min = v;
-          if (v > max) max = v;
-        }
-        const pad = (max - min) * 0.05 || 1;
-        u.setScale('y', { min: Math.max(0, min - pad), max: Math.min(Y_MAX, max + pad) });
-      } else {
-        u.setScale('y', { min: 0, max: Y_MAX });
-      }
-    }
-  }, [autoScale]);
-
-  // パケット受信でバッファ更新と setData
+  // パケット受信でバッファ更新し、再描画をトリガー
   useEffect(() => {
     if (packet == null) return;
     const buffers = buffersRef.current;
-    const b0 = buffers[0]!;
-    const b1 = buffers[1]!;
-    const b2 = buffers[2]!;
-    const b3 = buffers[3]!;
-    b0.push(packet.ch0);
-    b1.push(packet.ch1);
-    b2.push(packet.ch2);
-    b3.push(packet.ch3);
+    buffers[0]!.push(packet.ch0);
+    buffers[1]!.push(packet.ch1);
+    buffers[2]!.push(packet.ch2);
+    buffers[3]!.push(packet.ch3);
     for (let ch = 0; ch < CHANNEL_COUNT; ch++) {
       const b = buffers[ch]!;
       if (b.length > POINTS) b.shift();
     }
-
-    const x = buildX();
-    for (let ch = 0; ch < CHANNEL_COUNT; ch++) {
-      const u = plotRefs.current[ch];
-      if (!u) continue;
-      const b = buffers[ch]!;
-      const y: (number | null)[] = [];
-      for (let i = 0; i < POINTS; i++) {
-        y.push(i < b.length ? b[i]! : null);
-      }
-      u.setData([x, y], false);
-      if (autoScale && b.length > 0) {
-        let min = b[0]!;
-        let max = b[0]!;
-        for (let i = 1; i < b.length; i++) {
-          const v = b[i]!;
-          if (v < min) min = v;
-          if (v > max) max = v;
-        }
-        const pad = (max - min) * 0.05 || 1;
-        u.setScale('y', { min: Math.max(0, min - pad), max: Math.min(Y_MAX, max + pad) });
-      }
-    }
-  }, [packet, autoScale]);
+    setDataVersion((v) => v + 1);
+  }, [packet]);
 
   return (
     <section aria-label="波形グラフ" style={{ marginTop: '1rem' }}>
@@ -204,23 +104,73 @@ export function WaveformChart({ packet, channelVisible = DEFAULT_CHANNEL_VISIBLE
         </label>
       </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        {[0, 1, 2, 3].map((ch) => (
-          <div
-            key={ch}
-            ref={(el) => {
-              if (containerRefs.current) containerRefs.current[ch] = el;
-            }}
-            data-channel={ch}
-            style={{
-              display: channelVisible[ch] !== false ? undefined : 'none',
-              width,
-              height: chartHeight + 8,
-              border: '1px solid #999',
-              boxSizing: 'border-box',
-              overflow: 'visible',
-            }}
-          />
-        ))}
+        {[0, 1, 2, 3].map((ch) => {
+          const buffer = buffersRef.current[ch]!;
+          const chartData = buildChartData(buffer);
+          const [yMin, yMax] = computeYDomain(buffer, autoScale);
+          const cfg = CHANNEL_CONFIG[ch] ?? {
+            label: `ch${ch}`,
+            color: '#888',
+          };
+          return (
+            <div
+              key={ch}
+              data-channel={ch}
+              style={{
+                display: channelVisible[ch] !== false ? undefined : 'none',
+                width: WIDTH,
+                border: '1px solid #999',
+                boxSizing: 'border-box',
+                overflow: 'visible',
+              }}
+            >
+              <div
+                style={{
+                  padding: '4px 8px 0',
+                  fontSize: '0.9rem',
+                  fontWeight: 600,
+                }}
+              >
+                {cfg.label}
+              </div>
+              <ResponsiveContainer width={WIDTH} height={HEIGHT}>
+                <LineChart
+                  data={chartData}
+                  margin={{ top: 8, right: 16, left: 8, bottom: 24 }}
+                >
+                  <XAxis
+                    dataKey="point"
+                    type="number"
+                    domain={[0, POINTS - 1]}
+                    tickFormatter={(v) => String(POINTS - Math.round(Number(v)))}
+                    label={{
+                      value: 'point',
+                      position: 'insideBottom',
+                      offset: -8,
+                    }}
+                  />
+                  <YAxis
+                    domain={[yMin, yMax]}
+                    label={{
+                      value: 'count',
+                      angle: -90,
+                      position: 'insideLeft',
+                      style: { textAnchor: 'middle' },
+                    }}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="value"
+                    stroke={cfg.color}
+                    dot={false}
+                    connectNulls
+                    isAnimationActive={false}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          );
+        })}
       </div>
     </section>
   );

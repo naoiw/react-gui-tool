@@ -154,6 +154,7 @@ export function WaveformChart({
                       value: 'count',
                       angle: 0,
                       position: 'top',
+                      offset: 20,
                       style: { textAnchor: 'middle' },
                     }}
                   />

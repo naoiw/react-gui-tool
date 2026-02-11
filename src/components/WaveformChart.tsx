@@ -64,7 +64,6 @@ function computeYDomain(buffer: number[], autoScale: boolean): [number, number] 
 
 const DEFAULT_CHANNEL_VISIBLE: boolean[] = [true, true, true, true];
 
-const WIDTH = 800;
 const HEIGHT = 280;
 
 export function WaveformChart({
@@ -118,7 +117,7 @@ export function WaveformChart({
               data-channel={ch}
               style={{
                 display: channelVisible[ch] !== false ? undefined : 'none',
-                width: WIDTH,
+                width: '100%',
                 border: '1px solid #999',
                 boxSizing: 'border-box',
                 overflow: 'visible',
@@ -133,7 +132,7 @@ export function WaveformChart({
               >
                 {cfg.label}
               </div>
-              <ResponsiveContainer width={WIDTH} height={HEIGHT}>
+              <ResponsiveContainer width="100%" height={HEIGHT}>
                 <LineChart
                   data={chartData}
                   margin={{ top: 8, right: 16, left: 8, bottom: 24 }}

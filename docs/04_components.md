@@ -163,9 +163,9 @@ export interface WaveformChartProps {
 
 ### 3.1 主な責務
 
-- ch0〜ch3 各 1 本の uPlot グラフを縦に並べて表示する
+- ch0〜ch3 各 1 本の Recharts LineChart を縦に並べて表示する
 - 各 ch について最新 20 点分のデータバッファを管理する
-- 縦軸オートスケールの ON/OFF を UI で切り替え、uPlot の `setScale` で反映する
+- 縦軸オートスケールの ON/OFF を UI で切り替え、Recharts の YAxis `domain` で反映する
 - `CHANNEL_CONFIG` からラベルと線色を取得し、プロットに適用する
 - `channelVisible` に応じて各 ch の `div` を非表示にする
 
@@ -175,7 +175,7 @@ export interface WaveformChartProps {
 - `App` 側ではパケットの配列や履歴を持たず、**バッファ管理は WaveformChart 内部に閉じ込める**設計
 - これにより、シリアル通信のロジックとグラフ描画のロジックが分離されます
 
-uPlot の詳細やバッファ管理の実装は `02_uplot.md` を参照してください。
+Recharts の詳細やバッファ管理の実装は `02_recharts.md` を参照してください。
 
 ---
 

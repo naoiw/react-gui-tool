@@ -173,6 +173,6 @@ while (true) {
 ## 6. 関連ドキュメント
 
 - Web Serial API と読み取りループ: `01_web_serial_api.md`
-- uPlot と波形表示: `02_uplot.md`
+- Recharts と波形表示: `02_recharts.md`
 - コンポーネント全体の構造: `04_components.md`
 

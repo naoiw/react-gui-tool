@@ -11,7 +11,7 @@
 ## 1. 技術スタックと構成
 
 - **フレームワーク**: React + TypeScript + Vite
-- **グラフ描画**: [uPlot](https://github.com/leeoniya/uPlot)
+- **グラフ描画**: [Recharts](https://recharts.org/)
 - **シリアル通信**: Web Serial API（対応ブラウザ: **Chrome / Edge**）
 - **ルーティング**: React Router（現状はシングルページで利用は最小限）
 
@@ -20,7 +20,7 @@
 - `src/main.tsx` … React アプリのエントリポイント（`BrowserRouter` + `App` のマウント）
 - `src/App.tsx` … アプリ全体の状態（接続・エラー・最後に受信したパケット・チャンネル表示 ON/OFF）を保持し、UI を構成
 - `src/components/SerialControl.tsx` … シリアル通信 UI と Web Serial API 呼び出し
-- `src/components/WaveformChart.tsx` … uPlot を使った 4ch 波形表示
+- `src/components/WaveformChart.tsx` … Recharts を使った 4ch 波形表示
 - `src/lib/serial/serialService.ts` … Web Serial API のラッパー（ポート取得・接続・読み取りループ）
 - `src/lib/packet/types.ts` / `parser.ts` … パケットの型定義と 16byte → 4ch へのパーサー
 - `src/lib/config/channelConfig.ts` … チャンネルごとのラベル・線色設定
@@ -51,10 +51,10 @@ flowchart LR
   Parser -->|ch0-ch3| App
   App -->|lastPacket| WaveformChart
   WaveformChart -->|append & shift| Buffer
-  Buffer -->|x:0..19, y:ch0| uPlot0["uPlot ch0"]
-  Buffer -->|x:0..19, y:ch1| uPlot1["uPlot ch1"]
-  Buffer -->|x:0..19, y:ch2| uPlot2["uPlot ch2"]
-  Buffer -->|x:0..19, y:ch3| uPlot3["uPlot ch3"]
+  Buffer -->|x:0..19, y:ch0| R0["Recharts ch0"]
+  Buffer -->|x:0..19, y:ch1| R1["Recharts ch1"]
+  Buffer -->|x:0..19, y:ch2| R2["Recharts ch2"]
+  Buffer -->|x:0..19, y:ch3| R3["Recharts ch3"]
 ```
 
 ### 各レイヤの役割
@@ -76,14 +76,14 @@ flowchart LR
   - `SerialControl` からのコールバックを受け取り、状態を更新する
   - `WaveformChart` に `packet={lastPacket}` と `channelVisible` を渡す
 
-- **WaveformChart + uPlot**  
-  - 4ch それぞれに 1 つずつ uPlot インスタンスを持つ
+- **WaveformChart + Recharts**  
+  - 4ch それぞれに 1 つずつ Recharts の LineChart を描画
   - 各 ch ごとに最新 20 点分のバッファを保持し、`packet` 受信時に FIFO（先入れ先出し）で更新
 
 詳細な挙動は下記のドキュメントを参照してください。
 
 - Web Serial 周り: `01_web_serial_api.md`
-- グラフ表示・uPlot: `02_uplot.md`
+- グラフ表示・Recharts: `02_recharts.md`
 - パケットフォーマット: `03_packet.md`
 
 ---
@@ -116,7 +116,7 @@ flowchart LR
 - 各 ch のラベル・線色は `CHANNEL_CONFIG`（`src/lib/config/channelConfig.ts`）で定義
 - ch ごとの表示 ON/OFF は `SerialControl` 側のボタン（`channelVisible`）で制御
 
-uPlot に特化した解説は `02_uplot.md` を参照してください。
+Recharts に特化した解説は `02_recharts.md` を参照してください。
 
 ---
 

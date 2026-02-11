@@ -51,10 +51,10 @@ flowchart LR
   Parser -->|ch0-ch3| App
   App -->|lastPacket| WaveformChart
   WaveformChart -->|append & shift| Buffer
-  Buffer -->|x:0..19,y:ch0[]| uPlot0[uPlot ch0]
-  Buffer -->|x:0..19,y:ch1[]| uPlot1[uPlot ch1]
-  Buffer -->|x:0..19,y:ch2[]| uPlot2[uPlot ch2]
-  Buffer -->|x:0..19,y:ch3[]| uPlot3[uPlot ch3]
+  Buffer -->|x:0..19, y:ch0| uPlot0["uPlot ch0"]
+  Buffer -->|x:0..19, y:ch1| uPlot1["uPlot ch1"]
+  Buffer -->|x:0..19, y:ch2| uPlot2["uPlot ch2"]
+  Buffer -->|x:0..19, y:ch3| uPlot3["uPlot ch3"]
 ```
 
 ### 各レイヤの役割

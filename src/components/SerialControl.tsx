@@ -53,6 +53,8 @@ export function SerialControl({
   const [error, setError] = useState<string | null>(null);
   const currentPortRef = useRef<SerialPort | null>(null);
   const isDisconnectingRef = useRef(false);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const readLoopPromiseRef = useRef<Promise<void> | null>(null);
 
   const clearError = useCallback(() => {
     setError(null);
@@ -115,10 +117,12 @@ export function SerialControl({
     try {
       await open(port, baudRate);
       currentPortRef.current = port;
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
       setConnected(true);
       onConnect();
 
-      startReadLoop(
+      const readLoopPromise = startReadLoop(
         port,
         onPacket,
         (err) => {
@@ -126,8 +130,11 @@ export function SerialControl({
           const msg = err instanceof Error ? err.message : String(err);
           setError(msg);
           onError(msg);
-        }
-      ).catch((err) => {
+        },
+        controller.signal
+      );
+      readLoopPromiseRef.current = readLoopPromise;
+      readLoopPromise.catch((err) => {
         if (isDisconnectingRef.current) return;
         const msg = err instanceof Error ? err.message : String(err);
         setError(msg);
@@ -144,15 +151,29 @@ export function SerialControl({
     const port = currentPortRef.current;
     if (!port) return;
     isDisconnectingRef.current = true;
+    const controller = abortControllerRef.current;
+    const readLoopPromise = readLoopPromiseRef.current;
     try {
+      if (controller) {
+        controller.abort();
+        abortControllerRef.current = null;
+      }
+      if (readLoopPromise) {
+        await readLoopPromise;
+        readLoopPromiseRef.current = null;
+      }
       await close(port);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setError(msg);
+      onError(msg);
     } finally {
       currentPortRef.current = null;
       isDisconnectingRef.current = false;
       setConnected(false);
       onDisconnect();
     }
-  }, [onDisconnect]);
+  }, [onDisconnect, onError]);
 
   return (
     <section aria-label="シリアル通信" className="serial-control" style={{ marginBottom: '1rem' }}>

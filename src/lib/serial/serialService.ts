@@ -47,12 +47,13 @@ export async function close(port: SerialPort): Promise<void> {
 /**
  * 読み取りループを開始する。受信バイトを内部バッファに蓄積し、
  * 16byte 揃ったタイミングでパースして onPacket を呼ぶ。
- * ポートが閉じられるかエラーで終了するまで実行する。
+ * signal が abort されるか、ポートが閉じられるかエラーで終了するまで実行する。
  */
 export async function startReadLoop(
   port: SerialPort,
   onPacket: (data: PacketData) => void,
-  onError?: (err: unknown) => void
+  onError?: (err: unknown) => void,
+  signal?: AbortSignal
 ): Promise<void> {
   if (!port.readable) {
     onError?.(new Error('ポートの読み取りストリームが利用できません'));
@@ -61,8 +62,18 @@ export async function startReadLoop(
   const reader = port.readable.getReader();
   const buffer: number[] = [];
 
+  const onAbort = (): void => {
+    reader.cancel().catch(() => {});
+  };
+  if (signal?.aborted) {
+    onAbort();
+  } else if (signal) {
+    signal.addEventListener('abort', onAbort, { once: true });
+  }
+
   try {
     while (true) {
+      if (signal?.aborted) break;
       const { value, done } = await reader.read();
       if (done) break;
       if (value) {
@@ -81,8 +92,12 @@ export async function startReadLoop(
       }
     }
   } catch (err) {
-    if (onError) onError(err);
+    const isAbort = err instanceof DOMException && err.name === 'AbortError';
+    if (!isAbort && onError) onError(err);
   } finally {
+    if (signal && !signal.aborted) {
+      signal.removeEventListener('abort', onAbort);
+    }
     reader.releaseLock();
   }
 }

@@ -142,6 +142,7 @@ export function WaveformChart({
                     dataKey="point"
                     type="number"
                     domain={[0, POINTS - 1]}
+                    ticks={[0, 5, 10, 15, 19]}
                     tickFormatter={(v) => String(POINTS - Math.round(Number(v)))}
                     label={{
                       value: 'point',

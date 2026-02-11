@@ -159,7 +159,7 @@ export function WaveformChart({
                     }}
                   />
                   <Line
-                    type="monotone"
+                    type="linear"
                     dataKey="value"
                     stroke={cfg.color}
                     dot={false}

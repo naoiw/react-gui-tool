@@ -134,7 +134,7 @@ export function WaveformChart({
               <ResponsiveContainer width="100%" height={HEIGHT}>
                 <LineChart
                   data={chartData}
-                  margin={{ top: 8, right: 16, left: 8, bottom: 24 }}
+                  margin={{ top: 8, right: 16, left: 52, bottom: 24 }}
                 >
                   <XAxis
                     dataKey="point"

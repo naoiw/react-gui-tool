@@ -10,7 +10,7 @@
 - **pnpm** … パッケージ管理
 - **React Router** … ルーティング
 - **Web Serial API** … ブラウザから COM ポートへアクセス
-- **uPlot** … 波形グラフの描画
+- **Recharts** … 波形グラフの描画
 
 ## 必要環境
 
@@ -86,7 +86,7 @@ pnpm build
 
 - [00_overview.md](docs/00_overview.md) … アプリ全体の概要・データフロー・画面構成
 - [01_web_serial_api.md](docs/01_web_serial_api.md) … Web Serial API とシリアル通信まわりの実装
-- [02_uplot.md](docs/02_uplot.md) … uPlot を使った波形グラフ表示とバッファ管理
+- [02_recharts.md](docs/02_recharts.md) … Recharts を使った波形グラフ表示とバッファ管理
 - [03_packet.md](docs/03_packet.md) … パケットフォーマットとパーサー（PacketData）
 - [04_components.md](docs/04_components.md) … App / SerialControl / WaveformChart の責務と関係
 - [05_config_and_styles.md](docs/05_config_and_styles.md) … チャンネル設定とスタイル（CSS）

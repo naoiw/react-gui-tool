@@ -44,6 +44,24 @@ pnpm build
 
 ビルド結果は `dist` ディレクトリに出力されます。
 
+## オフライン利用（ユーザー側の環境構築なし）
+
+`dist/index.html` を `file://` で直接開くと、Chrome/Edge/Brave のセキュリティ制限で JS/CSS が読み込めません。  
+配布時は `.exe` でローカル HTTP サーバーを起動する方式を使ってください。
+
+```bash
+pnpm bundle:offline
+```
+
+生成物は `release/offline-bundle` に出力されます。
+
+- `react-gui-tool-server.exe`
+- `dist/`
+- `start-server.bat`
+
+配布先ユーザーは `start-server.bat`（または `react-gui-tool-server.exe`）を実行し、表示される URL（例: `http://127.0.0.1:4173`）をブラウザで開けば利用できます。  
+この方式はインターネット接続不要で利用できます。
+
 ## GitHub Pages でのデプロイ
 
 `main` ブランチへの push で GitHub Actions がビルドし、GitHub Pages へ自動デプロイします。

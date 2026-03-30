@@ -6,7 +6,10 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "serve:dist": "node scripts/serve-dist.cjs",
+    "build:exe": "npm run build && pkg scripts/serve-dist.cjs --targets node18-win-x64 --output release/react-gui-tool-server.exe",
+    "bundle:offline": "npm run build:exe && node scripts/prepare-offline-bundle.cjs"
   },
   "dependencies": {
     "react": "^18.3.1",
@@ -19,6 +22,7 @@
     "@types/react-dom": "^18.3.1",
     "@types/w3c-web-serial": "^1.0.8",
     "@vitejs/plugin-react": "^4.3.3",
+    "pkg": "^5.8.1",
     "typescript": "~5.6.2",
     "vite": "^5.4.10"
   }

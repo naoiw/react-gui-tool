@@ -34,6 +34,16 @@ interface ChartDatum {
   value: number | null;
 }
 
+interface ManualDomain {
+  min: number;
+  max: number;
+}
+
+interface ManualDomainInput {
+  min: string;
+  max: string;
+}
+
 /** 横軸の値（インデックス 0～19。表示は 20～1 に変換） */
 function buildChartData(buffer: number[]): ChartDatum[] {
   const data: ChartDatum[] = [];
@@ -46,8 +56,13 @@ function buildChartData(buffer: number[]): ChartDatum[] {
   return data;
 }
 
-function computeYDomain(buffer: number[], autoScale: boolean): [number, number] {
-  if (!autoScale || buffer.length === 0) return [0, Y_MAX];
+function computeYDomain(
+  buffer: number[],
+  autoScale: boolean,
+  manualDomain: ManualDomain,
+): [number, number] {
+  if (!autoScale) return [manualDomain.min, manualDomain.max];
+  if (buffer.length === 0) return [0, Y_MAX];
   let min = buffer[0]!;
   let max = buffer[0]!;
   for (let i = 1; i < buffer.length; i++) {
@@ -65,14 +80,120 @@ function computeYDomain(buffer: number[], autoScale: boolean): [number, number] 
 const DEFAULT_CHANNEL_VISIBLE: boolean[] = [true, true, true, true];
 
 const HEIGHT = 350;
+const MANUAL_DOMAIN_DEFAULT: ManualDomain = { min: 0, max: Y_MAX };
+
+function clampRangeValue(value: number): number {
+  if (value < 0) return 0;
+  if (value > Y_MAX) return Y_MAX;
+  return value;
+}
+
+function createInitialManualDomain(): ManualDomain[] {
+  return Array.from({ length: CHANNEL_COUNT }, () => ({
+    min: MANUAL_DOMAIN_DEFAULT.min,
+    max: MANUAL_DOMAIN_DEFAULT.max,
+  }));
+}
+
+function createInitialManualDomainInput(): ManualDomainInput[] {
+  return Array.from({ length: CHANNEL_COUNT }, () => ({
+    min: String(MANUAL_DOMAIN_DEFAULT.min),
+    max: String(MANUAL_DOMAIN_DEFAULT.max),
+  }));
+}
 
 export function WaveformChart({
   packet,
   channelVisible = DEFAULT_CHANNEL_VISIBLE,
 }: WaveformChartProps) {
   const [autoScale, setAutoScale] = useState(false);
+  const [manualDomainByChannel, setManualDomainByChannel] = useState<ManualDomain[]>(
+    createInitialManualDomain,
+  );
+  const [manualDomainInputByChannel, setManualDomainInputByChannel] =
+    useState<ManualDomainInput[]>(createInitialManualDomainInput);
   const [, setDataVersion] = useState(0);
   const buffersRef = useRef<number[][]>([[], [], [], []]);
+
+  const handleManualDomainInputChange = (
+    ch: number,
+    key: keyof ManualDomainInput,
+    value: string,
+  ) => {
+    setManualDomainInputByChannel((prev) => {
+      const next = [...prev];
+      const current = next[ch] ?? {
+        min: String(MANUAL_DOMAIN_DEFAULT.min),
+        max: String(MANUAL_DOMAIN_DEFAULT.max),
+      };
+      next[ch] = {
+        ...current,
+        [key]: value,
+      };
+      return next;
+    });
+  };
+
+  const handleManualDomainInputBlur = (ch: number, key: keyof ManualDomainInput) => {
+    const raw = manualDomainInputByChannel[ch]?.[key] ?? '';
+    const parsed = Number(raw);
+    if (!Number.isFinite(parsed)) {
+      setManualDomainInputByChannel((prev) => {
+        const next = [...prev];
+        const currentInput = next[ch] ?? {
+          min: String(MANUAL_DOMAIN_DEFAULT.min),
+          max: String(MANUAL_DOMAIN_DEFAULT.max),
+        };
+        const fallback = manualDomainByChannel[ch] ?? MANUAL_DOMAIN_DEFAULT;
+        next[ch] = {
+          ...currentInput,
+          [key]: String(fallback[key]),
+        };
+        return next;
+      });
+      return;
+    }
+
+    const clampedValue = clampRangeValue(parsed);
+    const prevDomain = manualDomainByChannel[ch] ?? MANUAL_DOMAIN_DEFAULT;
+    const nextDomain: ManualDomain = {
+      min: key === 'min' ? clampedValue : prevDomain.min,
+      max: key === 'max' ? clampedValue : prevDomain.max,
+    };
+    if (nextDomain.min > nextDomain.max) {
+      setManualDomainInputByChannel((prev) => {
+        const next = [...prev];
+        const currentInput = next[ch] ?? {
+          min: String(MANUAL_DOMAIN_DEFAULT.min),
+          max: String(MANUAL_DOMAIN_DEFAULT.max),
+        };
+        next[ch] = {
+          ...currentInput,
+          [key]: String(prevDomain[key]),
+        };
+        return next;
+      });
+      return;
+    }
+
+    setManualDomainByChannel((prev) => {
+      const next = [...prev];
+      next[ch] = nextDomain;
+      return next;
+    });
+    setManualDomainInputByChannel((prev) => {
+      const next = [...prev];
+      const currentInput = next[ch] ?? {
+        min: String(MANUAL_DOMAIN_DEFAULT.min),
+        max: String(MANUAL_DOMAIN_DEFAULT.max),
+      };
+      next[ch] = {
+        ...currentInput,
+        [key]: String(clampedValue),
+      };
+      return next;
+    });
+  };
 
   // パケット受信でバッファ更新し、再描画をトリガー
   useEffect(() => {
@@ -106,7 +227,12 @@ export function WaveformChart({
         {[0, 1, 2, 3].map((ch) => {
           const buffer = buffersRef.current[ch]!;
           const chartData = buildChartData(buffer);
-          const [yMin, yMax] = computeYDomain(buffer, autoScale);
+          const manualDomain = manualDomainByChannel[ch] ?? MANUAL_DOMAIN_DEFAULT;
+          const manualDomainInput = manualDomainInputByChannel[ch] ?? {
+            min: String(MANUAL_DOMAIN_DEFAULT.min),
+            max: String(MANUAL_DOMAIN_DEFAULT.max),
+          };
+          const [yMin, yMax] = computeYDomain(buffer, autoScale, manualDomain);
           const cfg = CHANNEL_CONFIG[ch] ?? {
             label: `ch${ch}`,
             color: '#888',
@@ -127,9 +253,45 @@ export function WaveformChart({
                   padding: '4px 8px 0',
                   fontSize: '1.25rem',
                   fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: '0.5rem',
                 }}
               >
-                {cfg.label}
+                <span>{cfg.label}</span>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 400 }}>
+                    min
+                    <input
+                      type="number"
+                      min={0}
+                      max={Y_MAX}
+                      step={1}
+                      value={manualDomainInput.min}
+                      onChange={(e) => handleManualDomainInputChange(ch, 'min', e.target.value)}
+                      onBlur={() => handleManualDomainInputBlur(ch, 'min')}
+                      disabled={autoScale}
+                      style={{ width: '7rem', marginLeft: '0.25rem' }}
+                      aria-label={`${cfg.label} の縦軸最小値`}
+                    />
+                  </label>
+                  <label style={{ fontSize: '0.85rem', fontWeight: 400 }}>
+                    max
+                    <input
+                      type="number"
+                      min={0}
+                      max={Y_MAX}
+                      step={1}
+                      value={manualDomainInput.max}
+                      onChange={(e) => handleManualDomainInputChange(ch, 'max', e.target.value)}
+                      onBlur={() => handleManualDomainInputBlur(ch, 'max')}
+                      disabled={autoScale}
+                      style={{ width: '7rem', marginLeft: '0.25rem' }}
+                      aria-label={`${cfg.label} の縦軸最大値`}
+                    />
+                  </label>
+                </div>
               </div>
               <ResponsiveContainer width="100%" height={HEIGHT}>
                 <LineChart

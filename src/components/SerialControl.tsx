@@ -1,7 +1,7 @@
 /**
  * SerialControl … ポート一覧取得・選択、ボーレート選択、Connect/Disconnect、
- * Start/Stop（UI のみ）、エラー/状態のインライン表示。
- * docs/architecture.md のコンポーネント責務に従う。
+ * Start/Stop（UI のみ）と表示チャンネル切替を担当。
+ * エラーは onError から App に通知する。
  */
 import { useCallback, useRef, useState } from 'react';
 import type { PacketData } from '../lib/packet/types';
@@ -21,7 +21,7 @@ export interface SerialControlProps {
   onDisconnect: () => void;
   onPacket: (data: PacketData) => void;
   onError: (message: string | null) => void;
-  /** ch0～ch3 の波形表示 ON/OFF（渡すと 3 行目にトグルを表示） */
+  /** ch0～ch3 の波形表示 ON/OFF（渡すと表示切替を表示） */
   channelVisible?: boolean[];
   onChannelVisibleChange?: (index: number, visible: boolean) => void;
 }
@@ -50,14 +50,12 @@ export function SerialControl({
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [baudRate, setBaudRate] = useState<number>(115200);
   const [connected, setConnected] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const currentPortRef = useRef<SerialPort | null>(null);
   const isDisconnectingRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const readLoopPromiseRef = useRef<Promise<void> | null>(null);
 
   const clearError = useCallback(() => {
-    setError(null);
     onError(null);
   }, [onError]);
 
@@ -65,7 +63,6 @@ export function SerialControl({
     clearError();
     if (!isSerialSupported()) {
       const msg = 'Web Serial API が利用できません。Chrome または Edge で開いてください。';
-      setError(msg);
       onError(msg);
       return;
     }
@@ -77,7 +74,6 @@ export function SerialControl({
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
       onError(msg);
     }
   }, [clearError, selectedIndex]);
@@ -86,7 +82,6 @@ export function SerialControl({
     clearError();
     if (!isSerialSupported()) {
       const msg = 'Web Serial API が利用できません。Chrome または Edge で開いてください。';
-      setError(msg);
       onError(msg);
       return;
     }
@@ -97,7 +92,6 @@ export function SerialControl({
     } catch (e) {
       if ((e as Error).name === 'NotFoundError') return; // ユーザーがキャンセル
       const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
       onError(msg);
     }
   }, [clearError, onError]);
@@ -106,7 +100,6 @@ export function SerialControl({
     clearError();
     if (selectedIndex < 0 || selectedIndex >= ports.length) {
       const msg = 'ポートを選択してください。';
-      setError(msg);
       onError(msg);
       return;
     }
@@ -128,7 +121,6 @@ export function SerialControl({
         (err) => {
           if (isDisconnectingRef.current) return;
           const msg = err instanceof Error ? err.message : String(err);
-          setError(msg);
           onError(msg);
         },
         controller.signal
@@ -137,12 +129,10 @@ export function SerialControl({
       readLoopPromise.catch((err) => {
         if (isDisconnectingRef.current) return;
         const msg = err instanceof Error ? err.message : String(err);
-        setError(msg);
         onError(msg);
       });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
       onError(msg);
     }
   }, [clearError, selectedIndex, ports, baudRate, onConnect, onPacket, onError]);
@@ -165,7 +155,6 @@ export function SerialControl({
       await close(port);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
       onError(msg);
     } finally {
       currentPortRef.current = null;
@@ -176,91 +165,86 @@ export function SerialControl({
   }, [onDisconnect, onError]);
 
   return (
-    <section aria-label="シリアル通信" className="serial-control" style={{ marginBottom: '1rem' }}>
-      <div className="serial-control__row">
-        <button type="button" onClick={handleRefresh} disabled={connected}>
-          Refresh
-        </button>
-        <button type="button" onClick={handleAddPort} disabled={connected}>
-          Add port
-        </button>
-        <div className="serial-control__port-group">
-          <label className="serial-control__label">
-            COMポート一覧:
+    <section aria-label="シリアル通信" className="panel serial-control">
+      <div className="panel-header">
+        <div>
+          <p className="section-kicker">DEVICE</p>
+          <h2>シリアル接続</h2>
+        </div>
+        <span className={connected ? 'status-badge status-badge--connected' : 'status-badge'}>
+          {connected ? '接続中' : '未接続'}
+        </span>
+      </div>
+
+      <div className="serial-control__layout">
+        <div className="serial-control__actions">
+          <button className="button button--secondary" type="button" onClick={handleRefresh} disabled={connected}>
+            ポート更新
+          </button>
+          <button className="button button--secondary" type="button" onClick={handleAddPort} disabled={connected}>
+            ポート追加
+          </button>
+        </div>
+        <div className="serial-control__fields">
+          <label className="field-label">
+            COMポート
             <select
-              className="serial-control__port-select"
+              className="field-input"
               value={selectedIndex < 0 ? '' : selectedIndex}
-              onChange={(e) => setSelectedIndex(e.target.value === '' ? -1 : Number(e.target.value))}
+              onChange={(event) => setSelectedIndex(event.target.value === '' ? -1 : Number(event.target.value))}
               disabled={connected}
               aria-label="COMポート一覧"
             >
-              <option value="">-- 選択 --</option>
-              {ports.map((port, i) => (
-                <option key={i} value={i}>
-                  {getPortLabel(port, i)}
-                </option>
+              <option value="">ポートを選択</option>
+              {ports.map((port, index) => (
+                <option key={index} value={index}>{getPortLabel(port, index)}</option>
               ))}
             </select>
           </label>
-          <label className="serial-control__label">
-            Baudrate:
+          <label className="field-label">
+            ボーレート
             <select
+              className="field-input"
               value={baudRate}
-              onChange={(e) => setBaudRate(Number(e.target.value))}
+              onChange={(event) => setBaudRate(Number(event.target.value))}
               disabled={connected}
               aria-label="Baudrate"
             >
-              {BAUD_RATES.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
+              {BAUD_RATES.map((rate) => <option key={rate} value={rate}>{rate}</option>)}
             </select>
           </label>
         </div>
       </div>
-      <div className="serial-control__row">
+
+      <div className="serial-control__commands">
         {connected ? (
-          <button type="button" onClick={handleDisconnect}>
-            Disconnect
-          </button>
+          <button className="button button--secondary" type="button" onClick={handleDisconnect}>切断</button>
         ) : (
-          <button type="button" onClick={handleConnect}>
-            Connect
-          </button>
+          <button className="button button--primary" type="button" onClick={handleConnect}>接続</button>
         )}
-        <button type="button" disabled>
-          Start
-        </button>
-        <button type="button" disabled>
-          Stop
-        </button>
-        {channelVisible != null &&
-          onChannelVisibleChange != null &&
-          channelVisible.length >= 4 && (
-            <div className="serial-control__channel-toggles">
-              {[0, 1, 2, 3].map((ch) => (
-                <button
-                  key={ch}
-                  type="button"
-                  aria-pressed={channelVisible[ch]}
-                  aria-label={`ch${ch} 波形表示`}
-                  className={channelVisible[ch] ? 'channel-toggle--on' : undefined}
-                  onClick={() => onChannelVisibleChange(ch, !channelVisible[ch])}
-                >
-                  ch{ch}
-                </button>
-              ))}
-            </div>
-          )}
+        <button className="button button--secondary" type="button" disabled title="未実装">Start</button>
+        <button className="button button--secondary" type="button" disabled title="未実装">Stop</button>
+        <span className="helper-text">Start / Stop は未実装</span>
       </div>
-      {connected && (
-        <p style={{ margin: '0.25rem 0', fontSize: '0.9rem' }}>接続中</p>
-      )}
-      {error != null && (
-        <p role="alert" style={{ margin: '0.25rem 0', color: 'var(--error-color, #f88)' }}>
-          {error}
-        </p>
+
+      {channelVisible != null && onChannelVisibleChange != null && channelVisible.length >= 4 && (
+        <div className="channel-visibility">
+          <span className="field-label">表示チャンネル</span>
+          <div className="channel-visibility__buttons" role="group" aria-label="波形表示チャンネル">
+            {[0, 1, 2, 3].map((channel) => (
+              <button
+                key={channel}
+                type="button"
+                aria-pressed={channelVisible[channel]}
+                aria-label={`ch${channel} 波形表示`}
+                className={channelVisible[channel] ? 'button channel-toggle channel-toggle--on' : 'button channel-toggle'}
+                onClick={() => onChannelVisibleChange(channel, !channelVisible[channel])}
+              >
+                ch{channel}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
     </section>
   );

@@ -1,19 +1,18 @@
-# GitHub Pages へ dist をデプロイする
-# README: pnpm build → upload-pages-artifact → deploy-pages
-#
-# 404 が出る場合: リポジトリの Settings → Pages で Source を「GitHub Actions」に設定すること
-# https://docs.github.com/en/pages/getting-started-with-github-pages/configuring-a-publishing-source-for-your-github-pages-site#publishing-with-a-custom-github-actions-workflow
 name: Deploy to GitHub Pages
 
+# main: /react-gui-tool/ ; develop: /react-gui-tool/develop/
+# workflow_run must be defined on main to publish a validated develop revision.
 on:
   push:
     branches: [main]
+  workflow_run:
+    workflows: [Validate develop]
+    types: [completed]
+    branches: [develop]
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
@@ -21,42 +20,76 @@ concurrency:
 
 jobs:
   build:
+    if: >-
+      github.event_name == 'push' ||
+      (github.event_name == 'workflow_dispatch' && github.ref_name == 'main') ||
+      (github.event_name == 'workflow_run' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout production
         uses: actions/checkout@v4
+        with:
+          ref: main
+          path: production
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+      - name: Checkout validated preview revision
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && github.event.workflow_run.head_sha || 'develop' }}
+          path: preview
+
+      - uses: pnpm/action-setup@v4
         with:
           version: 9
 
-      - name: Setup Node
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
+          cache-dependency-path: |
+            production/pnpm-lock.yaml
+            preview/pnpm-lock.yaml
 
-      - name: Install
-        run: pnpm install
-
-      - name: Build (GitHub Pages base path)
-        run: pnpm build
+      - name: Build production
+        working-directory: production
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
         env:
-          GITHUB_PAGES: true
+          GITHUB_PAGES_BASE: /react-gui-tool/
 
-      - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+      - name: Build preview
+        working-directory: preview
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm build
+        env:
+          GITHUB_PAGES_BASE: /react-gui-tool/develop/
+
+      - name: Combine sites
+        run: |
+          mkdir -p publish/develop
+          cp -a production/dist/. publish/
+          cp -a preview/dist/. publish/develop/
+          touch publish/.nojekyll
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
         with:
-          path: dist
+          path: publish
 
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Deploy
-        id: deploy
+      - id: deployment
         uses: actions/deploy-pages@v4

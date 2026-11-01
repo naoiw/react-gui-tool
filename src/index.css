@@ -1,86 +1,125 @@
 :root {
-  font-family: system-ui, -apple-system, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
-  color-scheme: light;
-  color: #213547;
-  background-color: #fff;
+  /* Shared site chrome: photo-editor / naoiw.github.io */
+  --chrome-font: Inter, "Noto Sans JP", "Hiragino Kaku Gothic ProN", Meiryo, system-ui, sans-serif;
+  --chrome-width: 1180px;
+  --chrome-gutter: 28px;
+  --chrome-header-height: 78px;
+  --chrome-brand-size: 16px;
+  --chrome-caption-size: 11px;
+  --chrome-footer-size: 12px;
+  --canvas: #0b1220;
+  --panel: #172337;
+  --soft: #24344b;
+  --line: #304157;
+  --ink: #edf3fb;
+  --muted: #a0b2c8;
+  --accent: #70ddc7;
+  --accent-strong: #91ead8;
+  color-scheme: dark;
+  scrollbar-gutter: stable;
+  font-family: var(--chrome-font);
+  color: var(--ink);
+  background: var(--canvas);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
-
-* {
-  box-sizing: border-box;
+*, *::before, *::after { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; }
+button, input, select { font: inherit; }
+button { cursor: pointer; }
+button:disabled { cursor: not-allowed; opacity: .46; }
+button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
 }
-
-body {
-  margin: 0;
-  min-width: 320px;
+[hidden] { display: none !important; }
+.site-shell {
   min-height: 100vh;
+  background: radial-gradient(ellipse 70% 30% at 72% 0%, rgb(38 96 112 / 22%), transparent 80%), var(--canvas);
 }
-
-#root {
-  min-height: 100vh;
+.page-container { width: min(100%, var(--chrome-width)); min-width: 0; margin: 0 auto; padding: 0 var(--chrome-gutter); }
+.site-header { display: flex; min-height: var(--chrome-header-height); align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid #26374c; }
+.site-brand { display: inline-flex; align-items: center; gap: 11px; font-size: var(--chrome-brand-size); font-weight: 800; letter-spacing: .02em; }
+.brand-mark { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 10px; color: #9ef2df; background: #244755; font-size: 26px; line-height: 1; }
+.header-caption { color: #859bb3; font-size: var(--chrome-caption-size); font-weight: 700; letter-spacing: .12em; }
+.site-main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; min-height: calc(100vh - var(--chrome-header-height) - 85px); padding: 38px 0 60px; align-content: start; }
+.site-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 27px 0 31px; border-top: 1px solid #26374c; color: #8599b1; font-size: var(--chrome-footer-size); }
+.site-footer a { color: #b3c4d8; text-decoration: none; }
+.site-footer a:hover { color: var(--accent); }
+.page-intro { display: grid; gap: 12px; padding: 16px 0 6px; }
+.section-kicker { margin: 0; color: var(--accent); font-size: 11px; font-weight: 800; letter-spacing: .16em; }
+.page-intro h1 { margin: 0; font-size: clamp(1.8rem, 3.6vw, 2.6rem); font-weight: 750; letter-spacing: -.04em; line-height: 1.25; }
+.page-description { max-width: 740px; margin: 0; color: var(--muted); font-size: .9rem; line-height: 1.9; }
+.status-grid { display: grid; grid-template-columns: minmax(170px, 1fr) minmax(0, 2.5fr); gap: 16px; }
+.status-card, .panel, .waveform-card { min-width: 0; border: 1px solid var(--line); border-radius: 16px; background: linear-gradient(145deg, #19283c, #142033); }
+.status-card { display: grid; gap: 13px; padding: 20px 24px; }
+.status-card__label { color: var(--muted); font-size: .76rem; font-weight: 650; }
+.status-card__value { display: flex; align-items: center; gap: 9px; font-size: 1.05rem; }
+.status-card__value--active { color: var(--accent); }
+.status-dot { display: inline-block; width: 8px; height: 8px; flex: none; border-radius: 50%; background: #74849c; }
+.status-card__value--active .status-dot { background: var(--accent); }
+.packet-values { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; font-variant-numeric: tabular-nums; }
+.packet-values > span { display: grid; min-width: 0; gap: 6px; }
+.packet-values small { color: var(--muted); font-size: .72rem; }
+.packet-values strong { overflow-wrap: anywhere; font-size: 1rem; }
+.panel { padding: 24px; }
+.panel-header { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
+.panel-header > div { display: grid; gap: 7px; }
+.panel-header h2 { margin: 0; font-size: 1.15rem; letter-spacing: -.025em; }
+.status-badge { padding: 6px 11px; border: 1px solid var(--line); border-radius: 99px; background: var(--soft); color: var(--muted); font-size: .75rem; font-weight: 700; white-space: nowrap; }
+.status-badge--connected { border-color: #377565; background: #20453f; color: var(--accent); }
+.serial-control__layout { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 18px; align-items: end; }
+.serial-control__actions, .serial-control__commands, .channel-visibility__buttons { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+.serial-control__fields { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(130px, 1fr); gap: 12px; }
+.field-label { display: grid; min-width: 0; gap: 7px; color: var(--muted); font-size: .78rem; font-weight: 650; }
+.field-input { width: 100%; min-width: 0; min-height: 43px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; outline: none; background: var(--canvas); color: var(--ink); }
+.field-input:focus { border-color: var(--accent); }
+.button { display: inline-flex; min-height: 43px; align-items: center; justify-content: center; padding: 10px 17px; border: 1px solid var(--line); border-radius: 9px; font-size: .85rem; font-weight: 700; transition: background .16s, border-color .16s; }
+.button--primary { background: var(--accent); color: #0b2730; border-color: var(--accent); }
+.button--primary:hover:not(:disabled) { background: var(--accent-strong); }
+.button--secondary { background: var(--soft); color: var(--ink); }
+.button--secondary:hover:not(:disabled) { background: #304660; }
+.serial-control__commands, .channel-visibility { margin-top: 22px; padding-top: 18px; border-top: 1px solid var(--line); }
+.helper-text { color: var(--muted); font-size: .76rem; }
+.channel-visibility { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.channel-toggle { min-height: 37px; padding: 8px 14px; background: transparent; color: var(--muted); }
+.channel-toggle--on { border-color: #52958e; background: #244755; color: var(--accent); }
+.channel-toggle:hover { border-color: var(--accent); }
+.error-message { margin: 16px 0 0; padding: 13px 14px; border: 1px solid #91555c; border-radius: 9px; color: #ffc5c3; background: #42252b; font-size: .85rem; }
+.waveform-section { display: grid; gap: 17px; }
+.waveform-toolbar { display: flex; align-items: center; justify-content: flex-end; min-height: 28px; }
+.autoscale-label { display: inline-flex; align-items: center; gap: 8px; color: var(--muted); font-size: .85rem; cursor: pointer; }
+.autoscale-label input { width: 17px; height: 17px; accent-color: var(--accent); }
+.waveform-list { display: grid; gap: 16px; min-width: 0; }
+.waveform-card { padding: 21px 22px 8px; overflow: hidden; }
+.waveform-card__header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 8px; }
+.channel-heading { display: inline-flex; align-items: center; gap: 10px; font-size: 1.05rem; font-weight: 750; }
+.channel-indicator { width: 11px; height: 11px; border-radius: 50%; flex: none; }
+.chart-range { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.chart-range__field { display: flex; align-items: center; gap: 7px; color: var(--muted); font-size: .76rem; }
+.chart-range__input { width: 112px; min-width: 0; padding: 8px 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--canvas); color: var(--ink); font-variant-numeric: tabular-nums; }
+.chart-range__input:disabled { opacity: .45; }
+.recharts-cartesian-axis-tick-value, .recharts-label { fill: var(--muted); }
+.recharts-cartesian-axis-line, .recharts-cartesian-axis-tick-line { stroke: var(--line); }
+@media (max-width: 750px) {
+  .status-grid { grid-template-columns: minmax(0, 1fr); }
+  .serial-control__layout { grid-template-columns: minmax(0, 1fr); }
 }
-
-/* シリアル通信コントロール: ボタン・プルダウンを操作しやすく */
-.serial-control__row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  align-items: center;
+@media (max-width: 620px) {
+  :root { --chrome-gutter: 17px; --chrome-header-height: 67px; }
+  .header-caption { display: none; }
+  .site-main { gap: 18px; padding: 26px 0 44px; }
+  .page-intro { padding-top: 8px; }
+  .panel, .waveform-card { padding: 18px 16px 9px; }
+  .panel { padding-bottom: 18px; }
+  .serial-control__fields { grid-template-columns: minmax(0, 1fr); }
+  .serial-control__actions .button { flex: 1; }
+  .packet-values { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .chart-range { width: 100%; }
+  .chart-range__field { flex: 1; }
+  .chart-range__input { width: 100%; flex: 1; }
 }
-
-.serial-control__row + .serial-control__row {
-  margin-top: 0.5rem;
-}
-
-.serial-control .serial-control__row button {
-  min-height: 42px;
-  padding: 0.6rem 1.2rem;
-  font-size: 1rem;
-  cursor: pointer;
-}
-
-.serial-control .serial-control__row button:disabled {
-  cursor: not-allowed;
-}
-
-.serial-control .serial-control__row button.channel-toggle--on {
-  background-color: #e0e8f0;
-  border: 1px solid #6b8cae;
-}
-
-/* ch0～ch3 トグル: Stop との間を空け、右端に寄せる */
-.serial-control__channel-toggles {
-  margin-left: auto;
-  padding-left: 1.5rem;
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-}
-
-.serial-control__label {
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 1rem;
-}
-
-.serial-control .serial-control__row select {
-  min-height: 42px;
-  padding: 0.5rem 2rem 0.5rem 0.75rem;
-  font-size: 1rem;
-  cursor: pointer;
-}
-
-.serial-control__port-select {
-  min-width: 12rem;
-}
-
-/* COMポート一覧・Baudrate を右端に寄せる */
-.serial-control__port-group {
-  margin-left: auto;
-  display: flex;
-  gap: 0.5rem;
-  align-items: center;
-  flex-wrap: wrap;
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition: none !important; scroll-behavior: auto !important; }
 }

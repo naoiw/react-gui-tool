@@ -1,15 +1,16 @@
 # Dependencies
 node_modules/
 
-# Build
+# Build outputs
 dist/
+*.tsbuildinfo
 *.local
 
 # Editor
 .vscode/*
 !.vscode/extensions.json
 
-# Env
+# Environment
 .env
 .env.*
 !.env.example

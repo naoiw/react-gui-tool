@@ -98,7 +98,7 @@ export interface SerialControlProps {
   onDisconnect: () => void;
   onPacket: (data: PacketData) => void;
   onError: (message: string | null) => void;
-  /** ch0～ch3 の波形表示 ON/OFF（渡すと 3 行目にトグルを表示） */
+  /** ch0～ch3 の波形表示 ON/OFF（渡すと表示切替を表示） */
   channelVisible?: boolean[];
   onChannelVisibleChange?: (index: number, visible: boolean) => void;
 }
@@ -115,22 +115,9 @@ export interface SerialControlProps {
 
 ### 2.2 UI の構成
 
-シリアルエリアは 2 行のレイアウトになっています。
+シリアル操作はカード化し、ヘッダーの接続状態バッジ、ポート追加・更新、COMポートとボーレート設定、接続 / 切断、未実装の Start / Stop、ch0〜ch3 の表示切替で構成します。
 
-1 行目:
-
-- `Refresh` ボタン
-- `Add port` ボタン
-- `COMポート一覧` セレクトボックス
-- `Baudrate` セレクトボックス
-
-2 行目:
-
-- `Connect` / `Disconnect` ボタン（状態に応じてトグル）
-- `Start` / `Stop` ボタン（現時点では未実装で disabled）
-- ch0〜ch3 のトグルボタン群（`channelVisible` が渡されている場合のみ表示）
-
-エラーや「接続中」テキストは、このセクション内にインライン表示されます。
+接続エラーは `onError` から `App` へ通知し、1か所に表示します。レイアウト・配色・フォームは `src/index.css` で一括管理します。
 
 ### 2.3 読み取りループと状態フラグ
 

@@ -70,7 +70,7 @@ export default function App() {
         </main>
         <footer className="site-footer">
           <span>React GUI Tool</span>
-          <a href="https://github.com/naoiw/react-gui-tool" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a href="https://github.com/naoiw/react-gui-tool" target="_blank" rel="noopener noreferrer" aria-label="GitHubでソースコードを開く">GitHub ↗</a>
         </footer>
       </div>
     </div>

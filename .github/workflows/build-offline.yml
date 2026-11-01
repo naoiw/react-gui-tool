@@ -1,0 +1,53 @@
+name: Build Windows offline ZIP
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: offline-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  package:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Build and package offline version
+        run: pnpm bundle:offline
+      - name: Smoke test Windows offline server
+        shell: powershell
+        run: .\scripts\test-offline.ps1 -BundleRoot .\release\offline-bundle
+      - name: Verify ZIP contents
+        shell: powershell
+        run: |
+          $target = Join-Path $env:RUNNER_TEMP 'react-gui-tool-zip-test'
+          Expand-Archive -Path release\react-gui-tool-offline-windows.zip -DestinationPath $target -Force
+          if (-not (Test-Path "$target\start-server.bat")) { throw 'BAT missing from ZIP' }
+          if (-not (Test-Path "$target\scripts\serve-dist.ps1")) { throw 'PowerShell server missing from ZIP' }
+          if (-not (Test-Path "$target\dist\index.html")) { throw 'Static site missing from ZIP' }
+      - name: Upload offline ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: react-gui-tool-offline-windows
+          path: release/react-gui-tool-offline-windows.zip
+          if-no-files-found: error
+          retention-days: 90

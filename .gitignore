@@ -23,3 +23,8 @@ pnpm-debug.log*
 # OS
 .DS_Store
 Thumbs.db
+
+# Offline package outputs
+release/offline-bundle/
+release/react-gui-tool-offline-windows.zip
+release/react-gui-tool-server.exe

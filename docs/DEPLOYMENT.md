@@ -23,3 +23,7 @@
 - Pages の `github-pages` 環境にブランチ制限がある場合は設定を確認してください。
 - Pages の URL は HTTPS ですが、Web Serial API 対応ブラウザが必要です。
 - `workflow_run` からの公開は同一リポジトリの `develop` の push に限り、検証成功の場合のみ動作します。
+
+## Windows オフラインZIP
+
+`.github/workflows/build-offline.yml` は `main` / `develop` のpushやPRで、Windows上のビルド、ZIP作成、PowerShellサーバーのHTTP動作確認を実行します。成功したジョブから `react-gui-tool-offline-windows` アーティファクトをダウンロードできます。Pages向けとは別に、ローカル起動用の相対アセットパスでビルドします。詳細は [OFFLINE.md](OFFLINE.md) を参照してください。

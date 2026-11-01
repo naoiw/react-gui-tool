@@ -52,16 +52,20 @@ pnpm build
 3. 検証済みの `develop` の更新は、`main` に配置した公開ワークフローが `/develop/` に反映します。
 4. `develop` → `main` の Pull Request で本番反映します。マージ後も `develop` を維持・同期します。
 
-## オフライン配布
+## Windows オフライン版（BAT + ZIP）
 
-```bash
-pnpm bundle:offline
-```
+[Build Windows offline ZIP](https://github.com/naoiw/react-gui-tool/actions/workflows/build-offline.yml) の成功した実行から `react-gui-tool-offline-windows` アーティファクトをダウンロードします。
 
-このコマンドは `pnpm build` と Windows 向け `pkg` パッケージングを実行し、`release/offline-bundle/` に `react-gui-tool-server.exe`、`start-server.bat`、`dist/` を生成します。Windows で `start-server.bat` を起動するとローカルサーバーから画面を開けます。ブラウザの `file://` で直接 `dist/index.html` を開く方式は非対応です。
+1. ZIPを展開する。
+2. `start-server.bat` をダブルクリックする。
+3. 自動的に開くブラウザでWeb Serial APIを使う（**Chrome/Edge** が必要。既定ブラウザが非対応なら表示URLをChrome/Edgeで開く）。
+4. 停止するときはコマンドプロンプトで `Ctrl+C`。
 
-既存の `release/` 内のコミット済み実行ファイルは以前のビルドです。UI の変更をオフライン版へ反映する場合は、Windows で改めてパッケージを生成してください。
+実行時のNode.js・pnpm・Python・ネット接続は不要です。Windows標準PowerShellでローカルサーバーを起動します。USBシリアル機器とドライバは別途必要です。
 
+配布用ZIPはmain/developの更新時にWindows Actionsでビルド・動作確認して生成します。ソースから手元で生成する場合は `pnpm bundle:offline` を実行します（ビルド用PCにはNode.jsとpnpmが必要）。古いコミット済みEXE/ZIPは削除しました。
+
+詳細: [オフライン版の手順](docs/OFFLINE.md)
 ## 構成・ドキュメント
 
 - `src/components/` — シリアル接続 UI と Recharts 波形表示
@@ -69,7 +73,7 @@ pnpm bundle:offline
 - `src/index.css` — 共通デザイン、フォーム、状態表示、レスポンシブスタイル
 - `scripts/` — オフライン配布用サーバーとバンドル作成
 - `.github/workflows/` — 検証と Pages 公開
-- [開発手順](docs/DEVELOPMENT.md) / [デプロイ構成](docs/DEPLOYMENT.md) / [UIの共通方針](docs/UI_CONSISTENCY.md)
+- [開発手順](docs/DEVELOPMENT.md) / [デプロイ構成](docs/DEPLOYMENT.md) / [オフライン版](docs/OFFLINE.md) / [UIの共通方針](docs/UI_CONSISTENCY.md)
 - [技術概要](docs/00_overview.md) / [Web Serial API](docs/01_web_serial_api.md) / [グラフ表示](docs/02_recharts.md) / [パケット仕様](docs/03_packet.md) / [コンポーネント構成](docs/04_components.md) / [設定とスタイル](docs/05_config_and_styles.md)
 
 ## ライセンス

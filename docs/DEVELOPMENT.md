@@ -40,4 +40,4 @@ pnpm preview
 
 ## オフライン版
 
-`pnpm bundle:offline` は Windows 用実行ファイルを生成します。コミット済みの `release/` バイナリは自動で更新されないため、配布前に必ず再生成して動作を確認してください。
+`pnpm bundle:offline` はViteの相対パスビルドと配布用BAT・PowerShellサーバーをまとめ、`release/react-gui-tool-offline-windows.zip` を作成します。Windows用EXEの再生成は不要です。詳しくは [OFFLINE.md](OFFLINE.md) を参照してください。

@@ -1,38 +1,51 @@
 const { copyFileSync, cpSync, existsSync, mkdirSync, rmSync, writeFileSync } = require('node:fs');
-const { join } = require('node:path');
+const { join, resolve } = require('node:path');
+const { spawnSync } = require('node:child_process');
 
-const rootDir = process.cwd();
+const rootDir = resolve(__dirname, '..');
+const distDir = join(rootDir, 'dist');
 const releaseDir = join(rootDir, 'release');
-const exePath = join(releaseDir, 'react-gui-tool-server.exe');
-const distPath = join(rootDir, 'dist');
 const bundleDir = join(releaseDir, 'offline-bundle');
-const bundleDistDir = join(bundleDir, 'dist');
-const bundleExePath = join(bundleDir, 'react-gui-tool-server.exe');
-const launcherPath = join(bundleDir, 'start-server.bat');
+const zipPath = join(releaseDir, 'react-gui-tool-offline-windows.zip');
 
-if (!existsSync(exePath)) {
-  console.error(`EXE not found: ${exePath}`);
-  console.error('Run "npm run build:exe" first.');
+if (!existsSync(join(distDir, 'index.html'))) {
+  console.error('dist/index.html not found. Run "pnpm build" first.');
   process.exit(1);
 }
-
-if (!existsSync(distPath)) {
-  console.error(`dist not found: ${distPath}`);
-  console.error('Run "npm run build" first.');
-  process.exit(1);
-}
-
 rmSync(bundleDir, { recursive: true, force: true });
-mkdirSync(bundleDir, { recursive: true });
+mkdirSync(join(bundleDir, 'scripts'), { recursive: true });
+cpSync(distDir, join(bundleDir, 'dist'), { recursive: true });
+copyFileSync(join(rootDir, 'start-server.bat'), join(bundleDir, 'start-server.bat'));
+copyFileSync(join(rootDir, 'scripts', 'serve-dist.ps1'), join(bundleDir, 'scripts', 'serve-dist.ps1'));
+writeFileSync(join(bundleDir, 'README-OFFLINE.txt'), [
+  'React GUI Tool - Windows offline version', '',
+  '1. Extract all files from this ZIP.',
+  '2. Double-click start-server.bat.',
+  '3. Open the shown http://127.0.0.1:port/ URL in Chrome or Edge.',
+  '4. Press Ctrl+C in the command window to stop.', '',
+  'No Node.js, npm, pnpm, Python, or Internet connection is needed to run.',
+  'The Windows PowerShell server listens on 127.0.0.1 only.',
+  'A serial device, suitable driver, and browser port permission are still needed.',
+].join('\r\n') + '\r\n', 'utf8');
 
-copyFileSync(exePath, bundleExePath);
-cpSync(distPath, bundleDistDir, { recursive: true });
-
-writeFileSync(
-  launcherPath,
-  '@echo off\r\n' +
-    'cd /d "%~dp0"\r\n' +
-    'react-gui-tool-server.exe\r\n',
-);
-
-console.log(`Offline bundle created: ${bundleDir}`);
+rmSync(zipPath, { force: true });
+let command, args, cwd;
+if (process.platform === 'win32') {
+  command = 'powershell.exe';
+  args = [
+    '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
+    join(rootDir, 'scripts', 'zip-offline.ps1'), bundleDir, zipPath,
+  ];
+  cwd = rootDir;
+} else {
+  command = 'zip';
+  args = ['-q', '-r', zipPath, '.'];
+  cwd = bundleDir;
+}
+const result = spawnSync(command, args, { cwd, stdio: 'inherit' });
+if (result.error || result.status !== 0 || !existsSync(zipPath)) {
+  console.error('Failed to create offline ZIP.', result.error ?? result.status);
+  process.exit(1);
+}
+console.log('Offline bundle directory: ' + bundleDir);
+console.log('Offline ZIP: ' + zipPath);

@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "serve:dist": "node scripts/serve-dist.cjs",
     "build:exe": "npm run build && pkg scripts/serve-dist.cjs --targets node18-win-x64 --output release/react-gui-tool-server.exe",
-    "bundle:offline": "npm run build:exe && node scripts/prepare-offline-bundle.cjs"
+    "bundle:offline": "pnpm build && node scripts/prepare-offline-bundle.cjs"
   },
   "dependencies": {
     "react": "^18.3.1",

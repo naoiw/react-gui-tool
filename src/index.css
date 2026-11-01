@@ -36,16 +36,18 @@ button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible
 [hidden] { display: none !important; }
 .site-shell {
   min-height: 100vh;
+  display: flex;
+  flex-direction: column;
   background: radial-gradient(ellipse 70% 30% at 72% 0%, rgb(38 96 112 / 22%), transparent 80%), var(--canvas);
 }
-.page-container { width: min(100%, var(--chrome-width)); min-width: 0; margin: 0 auto; padding: 0 var(--chrome-gutter); }
+.page-container { width: min(100%, var(--chrome-width)); min-width: 0; flex: 1; display: flex; flex-direction: column; margin: 0 auto; padding: 0 var(--chrome-gutter); }
 .site-header { display: flex; min-height: var(--chrome-header-height); align-items: center; justify-content: space-between; gap: 16px; border-bottom: 1px solid #26374c; }
 .site-brand { display: inline-flex; align-items: center; gap: 11px; font-size: var(--chrome-brand-size); font-weight: 800; letter-spacing: .02em; }
 .brand-mark { display: grid; width: 36px; height: 36px; place-items: center; border-radius: 10px; color: #9ef2df; background: #244755; font-size: 26px; line-height: 1; }
 .header-caption { color: #859bb3; font-size: var(--chrome-caption-size); font-weight: 700; letter-spacing: .12em; }
-.site-main { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; min-height: calc(100vh - var(--chrome-header-height) - 85px); padding: 38px 0 60px; align-content: start; }
-.site-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 27px 0 31px; border-top: 1px solid #26374c; color: #8599b1; font-size: var(--chrome-footer-size); }
-.site-footer a { color: #b3c4d8; text-decoration: none; }
+.site-main { flex: 1; display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; gap: 24px; padding: 38px 0 60px; align-content: start; }
+.site-footer { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 28px 0 32px; border-top: 1px solid #233248; color: #829bb0; font-size: var(--chrome-footer-size); font-weight: 500; letter-spacing: .02em; }
+.site-footer a { margin-left: auto; color: #b3c4d8; text-decoration: none; white-space: nowrap; }
 .site-footer a:hover { color: var(--accent); }
 .page-intro { display: grid; gap: 12px; padding: 16px 0 6px; }
 .section-kicker { margin: 0; color: var(--accent); font-size: 11px; font-weight: 800; letter-spacing: .16em; }
@@ -109,6 +111,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, a:focus-visible
 @media (max-width: 620px) {
   :root { --chrome-gutter: 17px; --chrome-header-height: 67px; }
   .header-caption { display: none; }
+  .site-footer { flex-wrap: wrap; }
   .site-main { gap: 18px; padding: 26px 0 44px; }
   .page-intro { padding-top: 8px; }
   .panel, .waveform-card { padding: 18px 16px 9px; }

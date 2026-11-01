@@ -79,7 +79,7 @@ function computeYDomain(
 
 const DEFAULT_CHANNEL_VISIBLE: boolean[] = [true, true, true, true];
 
-const HEIGHT = 350;
+const HEIGHT = 280;
 const MANUAL_DOMAIN_DEFAULT: ManualDomain = { min: 0, max: Y_MAX };
 
 function clampRangeValue(value: number): number {
@@ -211,9 +211,9 @@ export function WaveformChart({
   }, [packet]);
 
   return (
-    <section aria-label="波形グラフ" style={{ marginTop: '1rem' }}>
-      <div style={{ marginBottom: '0.5rem' }}>
-        <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+    <section aria-label="波形グラフ" className="waveform-section">
+      <div className="waveform-toolbar">
+        <label className="autoscale-label">
           <input
             type="checkbox"
             checked={autoScale}
@@ -223,7 +223,7 @@ export function WaveformChart({
           縦軸オートスケール
         </label>
       </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+      <div className="waveform-list">
         {[0, 1, 2, 3].map((ch) => {
           const buffer = buffersRef.current[ch]!;
           const chartData = buildChartData(buffer);
@@ -241,27 +241,15 @@ export function WaveformChart({
             <div
               key={ch}
               data-channel={ch}
-              style={{
-                display: channelVisible[ch] !== false ? undefined : 'none',
-                width: '100%',
-                boxSizing: 'border-box',
-                overflow: 'visible',
-              }}
+              className="waveform-card"
+              hidden={channelVisible[ch] === false}
             >
               <div
-                style={{
-                  padding: '4px 8px 0',
-                  fontSize: '1.25rem',
-                  fontWeight: 600,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '0.5rem',
-                }}
+                className="waveform-card__header"
               >
-                <span>{cfg.label}</span>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
-                  <label style={{ fontSize: '0.85rem', fontWeight: 400 }}>
+                <span className="channel-heading"><span className="channel-indicator" style={{ backgroundColor: cfg.color }} aria-hidden="true" />{cfg.label}</span>
+                <div className="chart-range">
+                  <label className="chart-range__field">
                     min
                     <input
                       type="number"
@@ -272,11 +260,11 @@ export function WaveformChart({
                       onChange={(e) => handleManualDomainInputChange(ch, 'min', e.target.value)}
                       onBlur={() => handleManualDomainInputBlur(ch, 'min')}
                       disabled={autoScale}
-                      style={{ width: '7rem', marginLeft: '0.25rem' }}
+                      className="chart-range__input"
                       aria-label={`${cfg.label} の縦軸最小値`}
                     />
                   </label>
-                  <label style={{ fontSize: '0.85rem', fontWeight: 400 }}>
+                  <label className="chart-range__field">
                     max
                     <input
                       type="number"
@@ -287,7 +275,7 @@ export function WaveformChart({
                       onChange={(e) => handleManualDomainInputChange(ch, 'max', e.target.value)}
                       onBlur={() => handleManualDomainInputBlur(ch, 'max')}
                       disabled={autoScale}
-                      style={{ width: '7rem', marginLeft: '0.25rem' }}
+                      className="chart-range__input"
                       aria-label={`${cfg.label} の縦軸最大値`}
                     />
                   </label>

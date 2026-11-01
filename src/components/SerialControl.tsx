@@ -176,92 +176,88 @@ export function SerialControl({
   }, [onDisconnect, onError]);
 
   return (
-    <section aria-label="シリアル通信" className="serial-control" style={{ marginBottom: '1rem' }}>
-      <div className="serial-control__row">
-        <button type="button" onClick={handleRefresh} disabled={connected}>
-          Refresh
-        </button>
-        <button type="button" onClick={handleAddPort} disabled={connected}>
-          Add port
-        </button>
-        <div className="serial-control__port-group">
-          <label className="serial-control__label">
-            COMポート一覧:
+    <section aria-label="シリアル通信" className="panel serial-control">
+      <div className="panel-header">
+        <div>
+          <p className="section-kicker">DEVICE</p>
+          <h2>シリアル接続</h2>
+        </div>
+        <span className={connected ? 'status-badge status-badge--connected' : 'status-badge'}>
+          {connected ? '接続中' : '未接続'}
+        </span>
+      </div>
+
+      <div className="serial-control__layout">
+        <div className="serial-control__actions">
+          <button className="button button--secondary" type="button" onClick={handleRefresh} disabled={connected}>
+            ポート更新
+          </button>
+          <button className="button button--secondary" type="button" onClick={handleAddPort} disabled={connected}>
+            ポート追加
+          </button>
+        </div>
+        <div className="serial-control__fields">
+          <label className="field-label">
+            COMポート
             <select
-              className="serial-control__port-select"
+              className="field-input"
               value={selectedIndex < 0 ? '' : selectedIndex}
-              onChange={(e) => setSelectedIndex(e.target.value === '' ? -1 : Number(e.target.value))}
+              onChange={(event) => setSelectedIndex(event.target.value === '' ? -1 : Number(event.target.value))}
               disabled={connected}
               aria-label="COMポート一覧"
             >
-              <option value="">-- 選択 --</option>
-              {ports.map((port, i) => (
-                <option key={i} value={i}>
-                  {getPortLabel(port, i)}
-                </option>
+              <option value="">ポートを選択</option>
+              {ports.map((port, index) => (
+                <option key={index} value={index}>{getPortLabel(port, index)}</option>
               ))}
             </select>
           </label>
-          <label className="serial-control__label">
-            Baudrate:
+          <label className="field-label">
+            ボーレート
             <select
+              className="field-input"
               value={baudRate}
-              onChange={(e) => setBaudRate(Number(e.target.value))}
+              onChange={(event) => setBaudRate(Number(event.target.value))}
               disabled={connected}
               aria-label="Baudrate"
             >
-              {BAUD_RATES.map((r) => (
-                <option key={r} value={r}>
-                  {r}
-                </option>
-              ))}
+              {BAUD_RATES.map((rate) => <option key={rate} value={rate}>{rate}</option>)}
             </select>
           </label>
         </div>
       </div>
-      <div className="serial-control__row">
+
+      <div className="serial-control__commands">
         {connected ? (
-          <button type="button" onClick={handleDisconnect}>
-            Disconnect
-          </button>
+          <button className="button button--secondary" type="button" onClick={handleDisconnect}>切断</button>
         ) : (
-          <button type="button" onClick={handleConnect}>
-            Connect
-          </button>
+          <button className="button button--primary" type="button" onClick={handleConnect}>接続</button>
         )}
-        <button type="button" disabled>
-          Start
-        </button>
-        <button type="button" disabled>
-          Stop
-        </button>
-        {channelVisible != null &&
-          onChannelVisibleChange != null &&
-          channelVisible.length >= 4 && (
-            <div className="serial-control__channel-toggles">
-              {[0, 1, 2, 3].map((ch) => (
-                <button
-                  key={ch}
-                  type="button"
-                  aria-pressed={channelVisible[ch]}
-                  aria-label={`ch${ch} 波形表示`}
-                  className={channelVisible[ch] ? 'channel-toggle--on' : undefined}
-                  onClick={() => onChannelVisibleChange(ch, !channelVisible[ch])}
-                >
-                  ch{ch}
-                </button>
-              ))}
-            </div>
-          )}
+        <button className="button button--secondary" type="button" disabled title="未実装">Start</button>
+        <button className="button button--secondary" type="button" disabled title="未実装">Stop</button>
+        <span className="helper-text">Start / Stop は未実装</span>
       </div>
-      {connected && (
-        <p style={{ margin: '0.25rem 0', fontSize: '0.9rem' }}>接続中</p>
+
+      {channelVisible != null && onChannelVisibleChange != null && channelVisible.length >= 4 && (
+        <div className="channel-visibility">
+          <span className="field-label">表示チャンネル</span>
+          <div className="channel-visibility__buttons" role="group" aria-label="波形表示チャンネル">
+            {[0, 1, 2, 3].map((channel) => (
+              <button
+                key={channel}
+                type="button"
+                aria-pressed={channelVisible[channel]}
+                aria-label={`ch${channel} 波形表示`}
+                className={channelVisible[channel] ? 'button channel-toggle channel-toggle--on' : 'button channel-toggle'}
+                onClick={() => onChannelVisibleChange(channel, !channelVisible[channel])}
+              >
+                ch{channel}
+              </button>
+            ))}
+          </div>
+        </div>
       )}
-      {error != null && (
-        <p role="alert" style={{ margin: '0.25rem 0', color: 'var(--error-color, #f88)' }}>
-          {error}
-        </p>
-      )}
+      {error != null && <p className="error-message" role="alert">{error}</p>}
     </section>
   );
 }

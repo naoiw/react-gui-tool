@@ -16,20 +16,20 @@ $job = Start-Job -ScriptBlock {
 } -ArgumentList $serverScript, (Join-Path $root 'dist'), $port
 try {
   $baseUrl = "http://127.0.0.1:$port"
-  $home = $null
+  $homeResponse = $null
   for ($i = 0; $i -lt 40; $i++) {
     if ($job.State -eq 'Failed') {
       throw "Server failed to start: $(Receive-Job $job)"
     }
     try {
-      $home = Invoke-WebRequest -UseBasicParsing -Uri "$baseUrl/" -TimeoutSec 2
+      $homeResponse = Invoke-WebRequest -UseBasicParsing -Uri "$baseUrl/" -TimeoutSec 2
       break
     }
     catch {
       Start-Sleep -Milliseconds 350
     }
   }
-  if ($null -eq $home -or $home.StatusCode -ne 200 -or $home.Content -notmatch '<html') {
+  if ($null -eq $homeResponse -or $homeResponse.StatusCode -ne 200 -or $homeResponse.Content -notmatch '<html') {
     throw 'Offline index.html was not served'
   }
   $asset = Invoke-WebRequest -UseBasicParsing -Uri "$baseUrl/assets/$($jsFile.Name)" -TimeoutSec 5

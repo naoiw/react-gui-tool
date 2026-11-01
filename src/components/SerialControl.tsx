@@ -1,7 +1,7 @@
 /**
  * SerialControl … ポート一覧取得・選択、ボーレート選択、Connect/Disconnect、
- * Start/Stop（UI のみ）、エラー/状態のインライン表示。
- * docs/architecture.md のコンポーネント責務に従う。
+ * Start/Stop（UI のみ）と表示チャンネル切替を担当。
+ * エラーは onError から App に通知する。
  */
 import { useCallback, useRef, useState } from 'react';
 import type { PacketData } from '../lib/packet/types';
@@ -21,7 +21,7 @@ export interface SerialControlProps {
   onDisconnect: () => void;
   onPacket: (data: PacketData) => void;
   onError: (message: string | null) => void;
-  /** ch0～ch3 の波形表示 ON/OFF（渡すと 3 行目にトグルを表示） */
+  /** ch0～ch3 の波形表示 ON/OFF（渡すと表示切替を表示） */
   channelVisible?: boolean[];
   onChannelVisibleChange?: (index: number, visible: boolean) => void;
 }

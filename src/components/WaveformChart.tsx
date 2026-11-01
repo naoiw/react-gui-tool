@@ -2,7 +2,7 @@
  * WaveformChart … Recharts のラップ、20 point のバッファ管理、
  * 4 つの独立したグラフ（ch0～ch3）、オートスケール用チェックボックス、
  * コンフィグ（系統名・線色）の適用。
- * docs/architecture.md のコンポーネント責務に従う。
+ * 詳細は docs/02_recharts.md / docs/04_components.md を参照。
  */
 import { useEffect, useRef, useState } from 'react';
 import {

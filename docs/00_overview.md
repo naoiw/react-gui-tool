@@ -24,7 +24,7 @@
 - `src/lib/serial/serialService.ts` … Web Serial API のラッパー（ポート取得・接続・読み取りループ）
 - `src/lib/packet/types.ts` / `parser.ts` … パケットの型定義と 16byte → 4ch へのパーサー
 - `src/lib/config/channelConfig.ts` … チャンネルごとのラベル・線色設定
-- `src/index.css` … シリアル UI まわりのスタイル
+- `src/index.css` … 共通ヘッダー・フッター、フォーム、波形カードのスタイル
 
 ---
 
@@ -92,19 +92,16 @@ flowchart LR
 
 ### 3.1 シリアル通信エリア
 
-`SerialControl` コンポーネントが担当し、`src/components/SerialControl.tsx` に実装されています。
+`SerialControl` はシリアル通信カードを担当します。
 
-- 左から順に  
-  **Refresh** / **Add port** / **COMポート一覧** / **Baudrate** / **Connect / Disconnect** / **Start / Stop** / **ch0〜ch3 トグル**
-- **Refresh** … 既に許可されたポート一覧を `getPorts()` で再取得
-- **Add port** … `requestPort()` でポート選択ダイアログを表示し、許可されたポートを一覧に追加
-- **COMポート一覧** … `SerialPort` の配列から選択（`getInfo()` により USB ベンダー/プロダクト ID をラベルに利用）
-- **Baudrate** … 9600〜115200 の候補から選択
-- **Connect / Disconnect** … 指定ポート・ボーレートで `open()` / `close()` を呼び出し、読み取りループを開始・終了
-- **Start / Stop** … 拡張用ボタン（現時点では UI のみ）
-- **エラー・状態表示** … エラーや「接続中」はシリアルエリア内にインラインで表示
+- ポート操作: ポート更新 / ポート追加
+- ポート設定: COMポート選択とボーレート選択
+- 接続制御: 接続 / 切断（接続中はポート操作を無効化）
+- Start / Stop: 拡張予定のため無効化
+- ch0〜ch3: 表示チャンネルの切替
+- 状態表示と最新データ: `App` がカードで表示し、エラーは1か所に通知
 
-より詳細な説明は `01_web_serial_api.md` を参照してください。
+`src/index.css` の共通 CSS を使用し、モバイル表示で折り返し・縦配置に対応します。
 
 ### 3.2 グラフエリア
 
@@ -147,9 +144,9 @@ Recharts に特化した解説は `02_recharts.md` を参照してください�
 
 ## 5. デプロイと制約
 
-- デプロイ先は GitHub Pages を想定しており、`main` ブランチへの push で Actions によるビルド＆デプロイが行われます。
+- デプロイ先は GitHub Pages を想定しており、`main` は本番、`develop` は開発プレビューです。GitHub Actions は両ブランチをビルドし、GitHub Pages の `/` と `/develop/` に配置します。
 - Web Serial API は **HTTPS** かつ対応ブラウザ（Chrome / Edge）でのみ利用可能です。
 - そのため、GitHub Pages 上でもブラウザは **Chrome または Edge** を使用する必要があります。
 
-デプロイ手順や Pages 設定の詳細は `README.md` を参照してください。
+デプロイ手順や Pages 設定の詳細は `DEPLOYMENT.md` を参照してください。
 

@@ -48,7 +48,6 @@ export default function App() {
               onClick={() => setTheme((current) => current === 'light' ? 'dark' : 'light')}
               aria-label={theme === 'light' ? 'ダークモードに切り替える' : 'ライトモードに切り替える'}
               title={theme === 'light' ? 'ダークモードに切り替える' : 'ライトモードに切り替える'}
-              aria-pressed={theme === 'dark'}
             >
               <span className="theme-toggle__icon" aria-hidden="true">{theme === 'light' ? '☾' : '☀'}</span>
               <span>{theme === 'light' ? 'ダーク' : 'ライト'}</span>

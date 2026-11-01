@@ -50,14 +50,12 @@ export function SerialControl({
   const [selectedIndex, setSelectedIndex] = useState<number>(-1);
   const [baudRate, setBaudRate] = useState<number>(115200);
   const [connected, setConnected] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const currentPortRef = useRef<SerialPort | null>(null);
   const isDisconnectingRef = useRef(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const readLoopPromiseRef = useRef<Promise<void> | null>(null);
 
   const clearError = useCallback(() => {
-    setError(null);
     onError(null);
   }, [onError]);
 
@@ -65,7 +63,6 @@ export function SerialControl({
     clearError();
     if (!isSerialSupported()) {
       const msg = 'Web Serial API が利用できません。Chrome または Edge で開いてください。';
-      setError(msg);
       onError(msg);
       return;
     }
@@ -77,7 +74,6 @@ export function SerialControl({
       }
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
       onError(msg);
     }
   }, [clearError, selectedIndex]);
@@ -86,7 +82,6 @@ export function SerialControl({
     clearError();
     if (!isSerialSupported()) {
       const msg = 'Web Serial API が利用できません。Chrome または Edge で開いてください。';
-      setError(msg);
       onError(msg);
       return;
     }
@@ -97,7 +92,6 @@ export function SerialControl({
     } catch (e) {
       if ((e as Error).name === 'NotFoundError') return; // ユーザーがキャンセル
       const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
       onError(msg);
     }
   }, [clearError, onError]);
@@ -106,7 +100,6 @@ export function SerialControl({
     clearError();
     if (selectedIndex < 0 || selectedIndex >= ports.length) {
       const msg = 'ポートを選択してください。';
-      setError(msg);
       onError(msg);
       return;
     }
@@ -128,7 +121,6 @@ export function SerialControl({
         (err) => {
           if (isDisconnectingRef.current) return;
           const msg = err instanceof Error ? err.message : String(err);
-          setError(msg);
           onError(msg);
         },
         controller.signal
@@ -137,12 +129,10 @@ export function SerialControl({
       readLoopPromise.catch((err) => {
         if (isDisconnectingRef.current) return;
         const msg = err instanceof Error ? err.message : String(err);
-        setError(msg);
         onError(msg);
       });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
       onError(msg);
     }
   }, [clearError, selectedIndex, ports, baudRate, onConnect, onPacket, onError]);
@@ -165,7 +155,6 @@ export function SerialControl({
       await close(port);
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      setError(msg);
       onError(msg);
     } finally {
       currentPortRef.current = null;
@@ -257,7 +246,6 @@ export function SerialControl({
           </div>
         </div>
       )}
-      {error != null && <p className="error-message" role="alert">{error}</p>}
     </section>
   );
 }

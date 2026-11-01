@@ -7,6 +7,7 @@ const INITIAL_CHANNEL_VISIBILITY = [true, true, true, true];
 
 export default function App() {
   const [connected, setConnected] = useState(false);
+  const [serialError, setSerialError] = useState<string | null>(null);
   const [lastPacket, setLastPacket] = useState<PacketData | null>(null);
   const [channelVisible, setChannelVisible] = useState<boolean[]>(INITIAL_CHANNEL_VISIBILITY);
 
@@ -46,10 +47,10 @@ export default function App() {
             <div className="status-card">
               <span className="status-card__label">最新の受信値</span>
               <div className="packet-values">
-                {([0, 1, 2, 3] as const).map((channel) => (
+                {(['ch0', 'ch1', 'ch2', 'ch3'] as const).map((channel) => (
                   <span key={channel}>
-                    <small>ch{channel}</small>
-                    <strong>{lastPacket == null ? '—' : lastPacket[`ch${channel}`]}</strong>
+                    <small>{channel}</small>
+                    <strong>{lastPacket?.[channel] ?? '—'}</strong>
                   </span>
                 ))}
               </div>
@@ -60,10 +61,11 @@ export default function App() {
             onConnect={() => setConnected(true)}
             onDisconnect={() => setConnected(false)}
             onPacket={setLastPacket}
-            onError={() => { /* SerialControl displays errors locally. */ }}
+            onError={setSerialError}
             channelVisible={channelVisible}
             onChannelVisibleChange={handleChannelVisibleChange}
           />
+          {serialError != null && <p className="error-message" role="alert">{serialError}</p>}
           <WaveformChart packet={lastPacket} channelVisible={channelVisible} />
         </main>
         <footer className="site-footer">

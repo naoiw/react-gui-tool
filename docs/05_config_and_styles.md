@@ -25,14 +25,21 @@ export const CHANNEL_CONFIG: ChannelConfig[] = [
 スタイルは `src/index.css` に集約しています。他リポジトリとの共通方針は [UI_CONSISTENCY.md](UI_CONSISTENCY.md) を参照してください。
 
 - `--chrome-*`: 他サイトとそろえた最大幅・余白・ヘッダー寸法・文字サイズ
-- `--canvas`, `--panel`, `--line`, `--ink`, `--muted`, `--accent`: ダークモードの配色トークン
+- `--canvas`, `--panel`, `--line`, `--ink`, `--muted`, `--accent` 等: ライト／ダークの配色トークン
 - `.site-header`, `.site-footer`, `.page-intro`: 共通ページ構成
+- `.theme-toggle`: ヘッダーに置くテーマ切替ボタン
 - `.status-grid`, `.status-card`: 接続状態と最新パケット
 - `.serial-control__*`: ポート設定、接続・切断、チャンネル操作
 - `.waveform-card`, `.chart-range__*`: チャンネル別波形、縦軸の手動設定
 - `.button`, `.field-input`, `.field-label`: 操作 UI
 
 画面幅 750px 以下では2列の領域を縦並びに変更し、620px 以下でフォームを1列化します。値のスケール処理・グラフのデータ保持など機能面は `WaveformChart.tsx` が担当します。
+
+## テーマ管理
+
+未設定時はライトモードです。`index.html` が `react-gui-tool-theme` の保存値を読み込んで `<html data-theme="dark">` を指定し、Reactの `App.tsx` がボタン操作と保存を管理します。
+
+`src/index.css` では `:root` にライトのトークン、`:root[data-theme="dark"]` にダークのトークンを設定しています。フォーム、グラフ、カードの配色はハードコードせず、必要に応じてトークンを追加してください。切替時は通信状態を保持します。
 
 ## 関連
 

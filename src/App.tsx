@@ -1,15 +1,32 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { SerialControl } from './components/SerialControl';
 import { WaveformChart } from './components/WaveformChart';
 import type { PacketData } from './lib/packet/types';
 
 const INITIAL_CHANNEL_VISIBILITY = [true, true, true, true];
+type Theme = 'light' | 'dark';
+const THEME_STORAGE_KEY = 'react-gui-tool-theme';
+
+function getInitialTheme(): Theme {
+  // index.html applies the saved preference before stylesheets load.
+  return document.documentElement.dataset.theme === 'dark' ? 'dark' : 'light';
+}
 
 export default function App() {
+  const [theme, setTheme] = useState<Theme>(getInitialTheme);
   const [connected, setConnected] = useState(false);
   const [serialError, setSerialError] = useState<string | null>(null);
   const [lastPacket, setLastPacket] = useState<PacketData | null>(null);
   const [channelVisible, setChannelVisible] = useState<boolean[]>(INITIAL_CHANNEL_VISIBILITY);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+    try {
+      window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+    } catch {
+      // The switch remains usable even if browser storage is disabled.
+    }
+  }, [theme]);
 
   const handleChannelVisibleChange = (index: number, visible: boolean) => {
     setChannelVisible((current) => current.map((value, channel) => channel === index ? visible : value));
@@ -23,7 +40,20 @@ export default function App() {
             <span className="brand-mark" aria-hidden="true">∿</span>
             <span>React GUI Tool</span>
           </div>
-          <span className="header-caption">SERIAL MONITOR</span>
+          <div className="header-actions">
+            <span className="header-caption">SERIAL MONITOR</span>
+            <button
+              className="theme-toggle"
+              type="button"
+              onClick={() => setTheme((current) => current === 'light' ? 'dark' : 'light')}
+              aria-label={theme === 'light' ? 'ダークモードに切り替える' : 'ライトモードに切り替える'}
+              title={theme === 'light' ? 'ダークモードに切り替える' : 'ライトモードに切り替える'}
+              aria-pressed={theme === 'dark'}
+            >
+              <span className="theme-toggle__icon" aria-hidden="true">{theme === 'light' ? '☾' : '☀'}</span>
+              <span>{theme === 'light' ? 'ダーク' : 'ライト'}</span>
+            </button>
+          </div>
         </header>
 
         <main className="site-main">

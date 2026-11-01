@@ -34,6 +34,12 @@ pnpm preview
 - `src/lib/config/channelConfig.ts` — ラベルと線の色
 - `src/index.css` — 共通クロームと個別コンポーネントのスタイル
 
+## テーマの確認
+
+ヘッダーのテーマボタンを切り替え、ライト／ダーク双方でボタン・入力欄・接続状態・波形の軸・エラーメッセージのコントラストを確認してください。新規ブラウザではライトが初期値で、再読み込み後も直前の選択を維持します。`localStorage` が利用できない場合も切替自体は動きます。
+
+テーマは `src/App.tsx` と `src/index.css`、初回描画前の反映は `index.html` に実装されています。Web Serial接続・バッファはテーマ変更で初期化しません。
+
 ## 運用
 
 `develop` に通常の変更を push し、検証成功後にプレビューを確認します。本番反映は `develop` から `main` への PR で行います。マージ後も `develop` を残し、両ブランチを同期します。TypeScript のビルドキャッシュ `*.tsbuildinfo` は Git にコミットしません。

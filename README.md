@@ -1,114 +1,77 @@
-# React GUI Tool（シリアル波形表示）
+# React GUI Tool
 
-1 ページの SPA で、COM ポート経由のシリアル通信を行い、取得したデータを波形として GUI 表示するツールです。
+React / TypeScript 製のシリアル波形モニターです。Web Serial API で受信した4チャンネルの値を Recharts で表示します。
+
+## 主な機能
+
+- Chrome / Edge からのシリアルポート検出・追加・接続・切断
+- ボーレートの選択（9,600〜115,200）
+- 16byte・4ch・32bit unsigned・リトルエンディアンのパケット受信
+- チャンネルごとに直近20点の波形表示・表示切替
+- 縦軸オートスケール、チャンネル別の手動範囲設定
+- PC / スマートフォン向けのレスポンシブ画面
+- オフライン配布用のローカル HTTP サーバーと Windows 実行ファイルの生成
+
+**制約**: Web Serial API に対応した Chrome / Edge と、HTTPS または localhost が必要です。Start / Stop ボタンは未実装です。実際の機器を接続する動作確認は別途必要です。
+
+## 公開先
+
+| 環境 | ブランチ | URL |
+| --- | --- | --- |
+| 本番 | `main` | https://naoiw.github.io/react-gui-tool/ |
+| 開発プレビュー | `develop` | https://naoiw.github.io/react-gui-tool/develop/ |
+
+`main` に統合されたワークフローが、両ブランチの内容を1つの Pages サイト内の別パスに配置します。
 
 ## 技術スタック
 
-- **TypeScript** … 型安全性と保守性のため
-- **React** … コンポーネントベースの UI 構築
-- **Vite** … 高速な開発サーバーとビルド
-- **pnpm** … パッケージ管理
-- **React Router** … ルーティング
-- **Web Serial API** … ブラウザから COM ポートへアクセス
-- **Recharts** … 波形グラフの描画
+- TypeScript 5 / React 18 / React Router 6
+- Web Serial API / Recharts 2
+- Vite 5 / CSS
+- Node.js 22 / pnpm 9
+- GitHub Actions / GitHub Pages
 
-## 必要環境
-
-- **Node.js** … 執筆時点の推奨は LTS（例: Node 22 以上）。[Node.js](https://nodejs.org/) からインストール
-- **pnpm** … `npm install -g pnpm` でインストール
-- **対応ブラウザ** … Web Serial API 対応のため **Chrome または Edge** で利用してください。GitHub Pages（HTTPS）でも Web Serial は利用可能です。
-
-## セットアップ
+## ローカル開発
 
 ```bash
-git clone <リポジトリURL>
+git clone https://github.com/naoiw/react-gui-tool.git
 cd react-gui-tool
-pnpm install
-```
-
-環境変数（`.env`）が必要な場合はリポジトリ内の説明に従って設定してください。基本は `pnpm install` のみで開発を開始できます。
-
-## 開発
-
-```bash
+git switch develop
+corepack enable
+pnpm install --frozen-lockfile
 pnpm dev
-```
-
-開発サーバーが起動します。localhost では Web Serial API が利用可能です。ブラウザは **Chrome または Edge** を使用してください。
-
-## ビルド
-
-```bash
 pnpm build
 ```
 
-ビルド結果は `dist` ディレクトリに出力されます。
+開発サーバーは `localhost` で動作します。生成された `dist/` は Git 管理対象外です。
 
-## オフライン利用（ユーザー側の環境構築なし）
+## ブランチ運用
 
-`dist/index.html` を `file://` で直接開くと、Chrome/Edge/Brave のセキュリティ制限で JS/CSS が読み込めません。  
-配布時は `.exe` でローカル HTTP サーバーを起動する方式を使ってください。
+1. 通常の変更は `develop` に反映し、`main` を本番ブランチとして維持します。
+2. `develop` への push と PR で TypeScript チェック・ビルドを実行します。
+3. 検証済みの `develop` の更新は、`main` に配置した公開ワークフローが `/develop/` に反映します。
+4. `develop` → `main` の Pull Request で本番反映します。マージ後も `develop` を維持・同期します。
+
+## オフライン配布
 
 ```bash
 pnpm bundle:offline
 ```
 
-生成物は `release/offline-bundle` に出力されます。
+このコマンドは `pnpm build` と Windows 向け `pkg` パッケージングを実行し、`release/offline-bundle/` に `react-gui-tool-server.exe`、`start-server.bat`、`dist/` を生成します。Windows で `start-server.bat` を起動するとローカルサーバーから画面を開けます。ブラウザの `file://` で直接 `dist/index.html` を開く方式は非対応です。
 
-- `react-gui-tool-server.exe`
-- `dist/`
-- `start-server.bat`
+既存の `release/` 内のコミット済み実行ファイルは以前のビルドです。UI の変更をオフライン版へ反映する場合は、Windows で改めてパッケージを生成してください。
 
-配布先ユーザーは `start-server.bat`（または `react-gui-tool-server.exe`）を実行し、表示される URL（例: `http://127.0.0.1:4173`）をブラウザで開けば利用できます。  
-この方式はインターネット接続不要で利用できます。
+## 構成・ドキュメント
 
-## GitHub Pages でのデプロイ
-
-`main` ブランチへの push で GitHub Actions がビルドし、GitHub Pages へ自動デプロイします。
-
-### 初回のみ：GitHub Pages を有効にする
-
-**404 / "Creating Pages deployment failed" が出る場合は、リポジトリで Pages のソースを「GitHub Actions」に設定してください。**
-
-1. GitHub でリポジトリを開く
-2. **Settings** → 左メニュー **Code and automation** の **Pages**
-3. **Build and deployment** の **Source** で **GitHub Actions** を選択する  
-   （「Deploy from a branch」や「None」のままでは `deploy-pages` が 404 になります）
-
-設定後、`main` への push または **Actions** タブから「Deploy to GitHub Pages」を手動実行するとデプロイされます。
-
-### ローカルでのビルド
-
-- `pnpm build` でビルドし、出力は `dist` にあります。
-- デプロイは `actions/upload-pages-artifact` と `actions/deploy-pages` が行います。
-
-**注意**: 本番は HTTPS のため Web Serial API は利用可能ですが、**対応ブラウザは Chrome/Edge に限定されます**。GitHub Pages の URL を開く際も Chrome または Edge を使用してください。
-
-## 使い方（概要）
-
-1. **シリアル通信**
-   - 左から順に: **Refresh** → **COMポート一覧**（プルダウン）→ **Baudrate**（プルダウン）→ **Connect/Disconnect** → **Start/Stop**
-   - 「Refresh」で COM ポート一覧を更新。「ポートを追加」で初回にポートを選択してアクセスを許可する。
-   - プルダウンでポートとボーレートを選択し、「Connect」/「Disconnect」で接続・切断
-   - 接続エラーや状態はシリアル設定エリアにインラインで表示されます
-2. **グラフ**
-   - 4 つのグラフ（ch0〜ch3 各 1 つ）を縦に配置。横軸は "point"（20 点）、縦軸は "count"（0〜2^32）
-   - 新しいデータが入ると波形が流れるように更新される
-   - 縦軸オートスケールはチェックボックスで切り替え可能
-   - 各チャンネルの系統名（ラベル）と線の色はコンフィグで変更可能（ビルド時に `src/lib/config/channelConfig.ts` 等で設定）
-3. **Start/Stop ボタン** … 拡張用の UI のみ用意しており、現時点では未実装です。
-
-## ドキュメント
-
-アーキテクチャ・設計の詳細は `docs/` 以下のトピック別ドキュメントを参照してください。
-
-- [00_overview.md](docs/00_overview.md) … アプリ全体の概要・データフロー・画面構成
-- [01_web_serial_api.md](docs/01_web_serial_api.md) … Web Serial API とシリアル通信まわりの実装
-- [02_recharts.md](docs/02_recharts.md) … Recharts を使った波形グラフ表示とバッファ管理
-- [03_packet.md](docs/03_packet.md) … パケットフォーマットとパーサー（PacketData）
-- [04_components.md](docs/04_components.md) … App / SerialControl / WaveformChart の責務と関係
-- [05_config_and_styles.md](docs/05_config_and_styles.md) … チャンネル設定とスタイル（CSS）
+- `src/components/` — シリアル接続 UI と Recharts 波形表示
+- `src/lib/` — パケットパーサー、シリアル通信、チャンネル設定
+- `src/index.css` — 共通デザイン、フォーム、状態表示、レスポンシブスタイル
+- `scripts/` — オフライン配布用サーバーとバンドル作成
+- `.github/workflows/` — 検証と Pages 公開
+- [開発手順](docs/DEVELOPMENT.md) / [デプロイ構成](docs/DEPLOYMENT.md) / [UIの共通方針](docs/UI_CONSISTENCY.md)
+- [技術概要](docs/00_overview.md) / [Web Serial API](docs/01_web_serial_api.md) / [グラフ表示](docs/02_recharts.md) / [パケット仕様](docs/03_packet.md) / [コンポーネント構成](docs/04_components.md) / [設定とスタイル](docs/05_config_and_styles.md)
 
 ## ライセンス
 
-本プロジェクトは [LICENSE](LICENSE) に従います。
+[MIT License](LICENSE)

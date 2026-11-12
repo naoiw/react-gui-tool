@@ -29,7 +29,7 @@ React / TypeScript 製のシリアル波形モニターです。Web Serial API �
 - TypeScript 5 / React 18 / React Router 6
 - Web Serial API / Recharts 2
 - Vite 5 / CSS
-- Node.js 22 / pnpm 9
+- Node.js 26 / pnpm 9
 - GitHub Actions / GitHub Pages
 
 ## ローカル開発
@@ -38,7 +38,7 @@ React / TypeScript 製のシリアル波形モニターです。Web Serial API �
 git clone https://github.com/naoiw/react-gui-tool.git
 cd react-gui-tool
 git switch develop
-corepack enable
+npm install --global pnpm@9
 pnpm install --frozen-lockfile
 pnpm dev
 pnpm build

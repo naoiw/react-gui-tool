@@ -27,7 +27,7 @@ Viteの配布資材は `file://` ではなく、BATから起動する `http://12
 
 ## ソースコードから配布ZIPを作る
 
-ビルド用PCにNode.js 22とpnpm 9を用意し、次を実行します。
+ビルド用PCにNode.js 26とpnpm 9を用意し、次を実行します。
 
 ```bash
 pnpm install --frozen-lockfile

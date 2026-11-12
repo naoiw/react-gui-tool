@@ -2,7 +2,7 @@
 
 ## 必要環境
 
-- Node.js 22（`.nvmrc`）
+- Node.js 26（`.nvmrc`）
 - pnpm 9（`pnpm/action-setup` に合わせる）
 - Web Serial API に対応した Chrome または Edge
 
@@ -10,7 +10,7 @@
 git clone https://github.com/naoiw/react-gui-tool.git
 cd react-gui-tool
 git switch develop
-corepack enable
+npm install --global pnpm@9
 pnpm install --frozen-lockfile
 pnpm dev
 ```
